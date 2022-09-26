@@ -16,7 +16,7 @@ app.use("/auth", authRouter);
 
 app.use(function(req, res, next) {
     res.status(404).send("Not Found");
-})
+});
 
 const PORT: string = process.env.PORT || "3005";
 app.listen(PORT);

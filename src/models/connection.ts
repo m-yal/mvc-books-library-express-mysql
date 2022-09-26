@@ -16,20 +16,8 @@ connection.connect((err: Error) => {
     } else {
         console.log("Database ------------ OK");
     }
-    createTables();
-    fulfillTables();
+    // createTables();
+    // fulfillTables();
 });
 
 export default connection;
-
-
-// export function getQuery() {
-    
-//     let query = "SELECT * FROM teacher";
-    
-//     connection.query(query, (err: Error, result: any, field: any) => {
-//         console.log(err);
-//         console.log(result);
-//         connection.end();
-//     });
-// }
