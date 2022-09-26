@@ -3,12 +3,12 @@ import booksRouter from "./routes/books";
 import bookRouter from "./routes/book";
 import authRouter from "./routes/auth";
 import dotenv from "dotenv";
-import { getQuery } from "./models/connection";
+import connection from "./models/connection";
 
 export const app = express();
 dotenv.config();
 
-getQuery();
+connection;
 
 app.use("/", booksRouter);
 app.use("/books", bookRouter);
