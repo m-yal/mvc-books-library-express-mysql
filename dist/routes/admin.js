@@ -9,4 +9,5 @@ const adminRouter = express_1.default.Router();
 adminRouter.delete("/books/:bookId", admin_1.deleteBook);
 adminRouter.get("/books", admin_1.getBooks);
 adminRouter.get("/books/:bookId", admin_1.getBook);
+adminRouter.get("/books/add", admin_1.addBook);
 exports.default = adminRouter;

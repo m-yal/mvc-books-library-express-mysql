@@ -10,14 +10,16 @@ const book_1 = __importDefault(require("./routes/book"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const connection_1 = __importDefault(require("./models/connection"));
+const admin_1 = __importDefault(require("./routes/admin"));
 exports.app = (0, express_1.default)();
 dotenv_1.default.config();
 connection_1.default;
-exports.app.use("/", books_1.default);
-exports.app.use("/books", book_1.default);
+exports.app.use("/", books_1.default); //get list of books
+exports.app.use("/books", book_1.default); //get single book
 exports.app.use("/auth", auth_1.default);
+exports.app.use("/admin", admin_1.default);
 exports.app.use(function (req, res, next) {
-    res.status(404).send("Not Found");
+    res.status(404).send({ error: "Not Found" });
 });
 const PORT = process.env.PORT || "3005";
 exports.app.listen(PORT);

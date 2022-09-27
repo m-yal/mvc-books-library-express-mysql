@@ -4,6 +4,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const mysql_1 = __importDefault(require("mysql"));
+const create_tables_1 = __importDefault(require("./sql-scripts/create-tables"));
+const fulfill_tables_1 = __importDefault(require("./sql-scripts/fulfill-tables"));
 const connection = mysql_1.default.createConnection({
     host: "localhost",
     user: "root",
@@ -18,7 +20,7 @@ connection.connect((err) => {
     else {
         console.log("Database ------------ OK");
     }
-    // createTables();
-    // fulfillTables();
+    (0, create_tables_1.default)();
+    (0, fulfill_tables_1.default)();
 });
 exports.default = connection;
