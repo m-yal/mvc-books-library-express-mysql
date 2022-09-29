@@ -11,9 +11,8 @@ export function getBook(req: any, res: any) {
             return res.send({error: "Error in database during getting sible book: " + err});
         }
         console.log(`Query result form file getting book by id ${bookId} : ${result}`);
-        res.send({result: result});
+        res.render("book/index");
     });
-    //send page with book
 }
 
 export function wantBook(req: any, res: any) {

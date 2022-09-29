@@ -11,8 +11,12 @@ const auth_1 = __importDefault(require("./routes/auth"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const connection_1 = __importDefault(require("./models/connection"));
 const admin_1 = __importDefault(require("./routes/admin"));
+const path_1 = __importDefault(require("path"));
 exports.app = (0, express_1.default)();
 dotenv_1.default.config();
+exports.app.use(express_1.default.static(path_1.default.join(__dirname, "../public")));
+exports.app.set("views", path_1.default.join(__dirname, "../src", "views"));
+exports.app.set('view engine', 'ejs');
 connection_1.default;
 exports.app.use("/", books_1.default); //get list of books
 exports.app.use("/books", book_1.default); //get single book

@@ -5,8 +5,14 @@ import authRouter from "./routes/auth";
 import dotenv from "dotenv";
 import connection from "./models/connection";
 import adminRouter from "./routes/admin";
+import path from "path";
+
+
 export const app = express();
 dotenv.config();
+
+app.set("views", path.join(__dirname, "../src", "views"))
+app.set('view engine', 'ejs');
 
 connection;
 
