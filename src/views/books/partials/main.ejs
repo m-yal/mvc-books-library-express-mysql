@@ -1,0 +1,24 @@
+<div class="container">
+    <% if (typeof searchQuery === "string") {%>
+        <div style="text-align: center;">
+            Результат поиска: <%= searchQuery%></b> , найдено: <%= books.length%> 
+        </div> 
+    <% } %> 
+    <div id="content" class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <% for (let i = 0; i < books.length; i++) { %>
+            <div data-book-id="<%= books[i].id %>" class="book_item col-xs-6 col-sm-3 col-md-2 col-lg-2">
+                <div class="book">
+                    <a href="http://localhost:3000/book/<%= books[i].id %>"><img src="../../../../public/images/<%= books[i].id %>" alt="<%= books[i].book_name %>">
+                        <div data-title="<%= books[i].book_name %>" class="blockI" style="height: 46px;">
+                            <div data-book-title="<%= books[i].book_name %>" class="title size_text"><%= books[i].book_name %></div>
+                            <div data-book-author="<%= books[i].author %>" class="author"><%= books[i].author %></div>
+                        </div>
+                    </a>
+                    <a href="http://localhost:3000/book/<%= books[i].id %>">
+                        <button type="button" class="details btn btn-success">Читать</button>
+                    </a>
+                </div>
+            </div>
+        <% } %>
+   </div>
+</div>

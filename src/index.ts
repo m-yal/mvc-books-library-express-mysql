@@ -1,6 +1,6 @@
 import express from "express";
 import booksRouter from "./routes/books";
-import bookRouter from "./routes/book";
+import {bookRouter as singleBookRouter} from "./routes/book";
 import authRouter from "./routes/auth";
 import dotenv from "dotenv";
 import connection from "./models/connection";
@@ -15,9 +15,10 @@ app.set("views", path.join(__dirname, "../src", "views"))
 app.set('view engine', 'ejs');
 
 connection;
+app.use(express.static("public"));
 
 app.use("/", booksRouter); //get list of books
-app.use("/books", bookRouter); //get single book
+app.use("/books", singleBookRouter); //get single book
 app.use("/auth", authRouter);
 app.use("/admin", adminRouter);
 

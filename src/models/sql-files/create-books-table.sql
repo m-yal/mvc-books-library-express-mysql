@@ -5,6 +5,8 @@ CREATE  TABLE books (
     image_path varchar(255) UNIQUE,
     book_description text,
     author varchar(255),
+    pages INT,
+    isbn varchar(255),
     is_deleted BOOLEAN DEFAULT FALSE,
     visits int DEFAULT 0,
     wants int DEFAULT 0

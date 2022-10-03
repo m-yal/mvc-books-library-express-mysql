@@ -8,7 +8,8 @@ const connection = mysql_1.default.createConnection({
     host: "localhost",
     user: "root",
     password: "123321",
-    database: "library"
+    database: "library",
+    multipleStatements: true
 });
 connection.connect((err) => {
     if (err) {
@@ -18,7 +19,18 @@ connection.connect((err) => {
     else {
         console.log("Database ------------ OK");
     }
-    // createTables();
-    // fulfillTables();
+    connection.query(`INSERT Products(ProductName, Manufacturer, ProductCount, Price) 
+                VALUES ('iPhone B', 'Appleeee', 5222, 756000);
+                INSERT Products(ProductName, Manufacturer, ProductCount, Price) 
+                VALUES ('iPhone C', 'Appleeee', 5222, 756000);
+                INSERT Products(ProductName, Manufacturer, ProductCount, Price) 
+                VALUES ('iPhone D', 'Appleeee', 5222, 756000);
+                `, (error, result) => {
+        if (error) {
+            return console.log("Error during operations");
+        }
+        console.log(JSON.stringify(result[0]));
+        console.log(result[0]);
+    });
 });
 exports.default = connection;

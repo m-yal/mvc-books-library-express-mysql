@@ -6,7 +6,8 @@ const connection = mysql.createConnection({
     host: "localhost",
     user: "root",
     password: "123321",
-    database: "library"
+    database: "library",
+    multipleStatements: true
 });
 
 connection.connect((err: Error) => {
@@ -16,8 +17,6 @@ connection.connect((err: Error) => {
     } else {
         console.log("Database ------------ OK");
     }
-    // createTables();
-    // fulfillTables();
 });
 
 export default connection;
