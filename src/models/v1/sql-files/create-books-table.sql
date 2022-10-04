@@ -8,6 +8,6 @@ CREATE  TABLE books (
     pages INT,
     isbn varchar(255),
     is_deleted BOOLEAN DEFAULT FALSE,
-    visits int DEFAULT 0,
-    wants int DEFAULT 0
+    visits INT DEFAULT 0,
+    wants INT DEFAULT 0
 );
