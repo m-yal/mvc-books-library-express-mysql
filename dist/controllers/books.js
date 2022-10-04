@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBooks = void 0;
-const connection_1 = __importDefault(require("../models/connection"));
+const connection_1 = __importDefault(require("../models/utils/connection"));
 const LIMIT = 20;
 function getBooks(req, res) {
     if (typeof req.query.search === "string") {
@@ -27,7 +27,7 @@ exports.getBooks = getBooks;
 function getAll(req, res) {
     console.log("INSIDE GET ALL METHOD");
     const offset = req.query.offset || 0;
-    const sql = `SELECT * FROM books WHERE is_deleted = FALSE LIMIT ${LIMIT} OFFSET ${offset};`;
+    const sql = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${offset};`;
     console.log("SQL query: " + sql);
     connection_1.default.query(sql, (err, result) => __awaiter(this, void 0, void 0, function* () {
         if (err) {
@@ -50,17 +50,17 @@ function search(req, res) {
     const offsetQuery = `LIMIT 20 OFFSET ${offset || 0}`;
     let sql;
     if (!author && !year) {
-        sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ${offsetQuery};`;
+        sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
     }
     else {
         if (author && year) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ${offsetQuery};`;
+            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
         }
         else if (author) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ${offsetQuery};`;
+            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`;
         }
         else {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ${offsetQuery};`;
+            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
         }
     }
     console.log("sql " + sql);

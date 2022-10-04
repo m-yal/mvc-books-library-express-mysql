@@ -3,7 +3,7 @@ import booksRouter from "./routes/books";
 import {bookRouter as singleBookRouter} from "./routes/book";
 import authRouter from "./routes/auth";
 import dotenv from "dotenv";
-import connection from "./models/connection";
+import connection from "./models/utils/connection";
 import adminRouter from "./routes/admin";
 import path from "path";
 

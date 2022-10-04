@@ -8,7 +8,11 @@
     "test": "npm run build && mocha dist/tests/run.js --exit",
     "build": "rm -rf ./dist && tsc",
     "start": "node dist/index.js",
-    "dev": "npm run build && npm run start"
+    "dev": "npm run build && npm run start",
+    "migration-v1:up": "npm run build && node dist/models/v1/sql-scripts/create-tables.js",
+    "migration-v1:down": "npm run build && node dist/models/v1/sql-scripts/delete-all.js",
+    "migration-v2:up": "npm run build && ",
+    "migration-v2:down": "npm run build && "
   },
   "repository": {
     "type": "git",

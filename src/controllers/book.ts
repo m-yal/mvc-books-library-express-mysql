@@ -1,4 +1,4 @@
-import connection from "../models/connection";
+import connection from "../models/utils/connection";
 
 export function getBook(req: any, res: any) {
     const bookId: string = req.params.bookId;

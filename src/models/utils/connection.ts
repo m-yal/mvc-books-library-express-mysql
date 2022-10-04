@@ -1,6 +1,4 @@
 import mysql from "mysql";
-import createTables from "./sql-scripts/create-tables";
-import fulfillTables from "./sql-scripts/fulfill-tables";
 
 const connection = mysql.createConnection({
     host: "localhost",
@@ -15,7 +13,7 @@ connection.connect((err: Error) => {
         console.log(err);
         return err;
     } else {
-        console.log("Database ------------ OK");
+        console.log("Database connection status ------------ OK");
     }
 });
 

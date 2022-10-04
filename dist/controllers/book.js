@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.wantBook = exports.getBook = void 0;
-const connection_1 = __importDefault(require("../models/connection"));
+const connection_1 = __importDefault(require("../models/utils/connection"));
 function getBook(req, res) {
     const bookId = req.params.bookId;
     console.log("Single book id: " + bookId);

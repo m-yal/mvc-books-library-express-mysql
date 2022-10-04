@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addBook = exports.getBook = exports.getBooks = exports.deleteBook = void 0;
-const connection_1 = __importDefault(require("../models/connection"));
+const connection_1 = __importDefault(require("../models/utils/connection"));
 const LIMIT = 20;
 function deleteBook(req, res) {
     const bookId = req.body.bookId;

@@ -1,6 +1,7 @@
-import executeSQLFile from "./execute";
+import executeSQLFile from "../../utils/execute";
 
 export default function createTables() {
-    executeSQLFile("create-books-table.sql");
+    executeSQLFile("create-table.sql");
 };
 
+createTables();

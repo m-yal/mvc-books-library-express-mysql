@@ -1,4 +1,4 @@
-import connection from "../models/connection";
+import connection from "../models/utils/connection";
 
 const LIMIT: number = 20;
 
@@ -13,7 +13,7 @@ export function getBooks(req: any, res: any) {
 function getAll(req: any, res: any) {
     console.log("INSIDE GET ALL METHOD");
     const offset = req.query.offset || 0;
-    const sql = `SELECT * FROM books WHERE is_deleted = FALSE LIMIT ${LIMIT} OFFSET ${offset};`;
+    const sql = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${offset};`;
     console.log("SQL query: " + sql);
     connection.query(sql, async (err, result) => {
         if (err) {
@@ -38,14 +38,14 @@ function search(req: any, res: any) {
 
     let sql: string;
     if (!author && !year) {
-        sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ${offsetQuery};`;
+        sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
     } else {
         if (author && year) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ${offsetQuery};`;                
+            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
         } else if (author) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ${offsetQuery};`
+            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`
         } else {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ${offsetQuery};`;                
+            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
         }
     }
     console.log("sql " + sql);
