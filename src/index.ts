@@ -23,7 +23,7 @@ app.use("/api/v1", authRouterV1);
 app.use("/api/v1", adminRouterV1);
 
 app.use(function(req, res, next) {
-    res.status(404).send({error: "Not Found"});
+    res.status(404).send({error: "Not Found Page"});
 });
 
 const PORT: string = process.env.PORT || "3005";

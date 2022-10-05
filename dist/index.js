@@ -23,7 +23,7 @@ exports.app.use("/api/v1", book_1.bookRouter); //get single book
 exports.app.use("/api/v1", auth_1.default);
 exports.app.use("/api/v1", admin_1.default);
 exports.app.use(function (req, res, next) {
-    res.status(404).send({ error: "Not Found" });
+    res.status(404).send({ error: "Not Found Page" });
 });
 const PORT = process.env.PORT || "3005";
 exports.app.listen(PORT);

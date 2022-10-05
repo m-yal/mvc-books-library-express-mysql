@@ -16,54 +16,39 @@ exports.wantBook = exports.getBook = void 0;
 const connection_1 = __importDefault(require("../models/utils/connection"));
 function getBook(req, res) {
     const bookId = req.params.bookId;
-    console.log("Single book id: " + bookId);
     connection_1.default.query(`SELECT * FROM books_v1 WHERE id = ${bookId} AND is_deleted = FALSE`, (err, result) => __awaiter(this, void 0, void 0, function* () {
         try {
-            if (err) {
-                console.log(`Error during getting book by id: ${bookId}`);
-                res.status(500);
-                return res.send({ error: "Error in database during getting sible book: " + err });
-            }
-            yield incrCounter("visits", req, res, bookId);
-            console.log(`Query result form file getting book by id ${bookId} : ${yield result}`);
-            const book = yield result[0];
-            const data = {
-                bookName: book.book_name,
-                year: book.publish_year,
-                imagePath: book.image_path,
-                desciption: book.book_description,
-                author: book.author,
-                bookId: book.id
-            };
+            if (err)
+                throw err;
+            incrCounter("visits", req, res, bookId);
             yield res.status(200);
-            yield res.render("v1/book/index", data);
+            yield res.render("v1/book/index", { book: result[0] });
         }
         catch (error) {
-            res.status(500);
+            yield res.status(500);
+            yield res.send({ error: `Error in database during getting single book with id ${bookId}: ${err}` });
         }
     }));
 }
 exports.getBook = getBook;
 function wantBook(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const bookId = req.params.bookId;
-        console.log("Single book id: " + bookId);
-        yield incrCounter("wants", req, res, bookId);
-    });
+    const bookId = req.params.bookId;
+    console.log("Single book id: " + bookId);
+    incrCounter("wants", req, res, bookId);
 }
 exports.wantBook = wantBook;
 function incrCounter(type, req, res, bookId) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let sql = `UPDATE books SET ${type} = ${type} + 1 WHERE id = ${bookId}`;
-        connection_1.default.query(sql, (err, result) => __awaiter(this, void 0, void 0, function* () {
-            if (err) {
-                console.log(`Error during increasing "${type}" counter book by id: ${bookId}`);
-                yield res.status(500);
-                return yield res.send({ error: `Error in database during increasing "${type}" counter: ` + err });
-            }
-            console.log(`Query result form increasing ${type} counter of book with id ${bookId} : ${result}`);
+    const sql = `UPDATE books_v1 SET ${type} = ${type} + 1 WHERE id = ${bookId}`;
+    connection_1.default.query(sql, (err) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            if (err)
+                throw err;
             yield res.status(200);
             yield res.end();
-        }));
-    });
+        }
+        catch (error) {
+            yield res.status(500);
+            return yield res.send(JSON.stringify({ error: `Error in database during increasing "${type}" counter of book with id ${bookId}: ` + err }));
+        }
+    }));
 }
