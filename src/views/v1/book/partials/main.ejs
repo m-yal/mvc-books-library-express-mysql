@@ -48,7 +48,7 @@
             </div>
         </div>
         <script>
-            const url = `http://localhost:3005/books/<%= bookId%>`;
+            const url = `http://localhost:3005/api/v1/books/<%= bookId%>`;
             async function wantThisBook() {
                 fetch(url, {
                     method: "POST",

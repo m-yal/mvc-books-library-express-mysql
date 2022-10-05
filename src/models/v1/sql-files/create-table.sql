@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS books (
+CREATE TABLE IF NOT EXISTS books_v1 (
     id int PRIMARY KEY AUTO_INCREMENT,
     book_name varchar(255) UNIQUE,
     publish_year smallint,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS books (
 );
 
 INSERT INTO
-	books(book_name, publish_year, image_path, book_description, author, pages, isbn)
+	books_v1(book_name, publish_year, image_path, book_description, author, pages, isbn)
 VALUES
 	("1984", 1949, "1984.jpg", "Незважаючи на художню вигадку, книга настільки реалістична, що перевертає свідомість, причому так, що хочеться перевернути її назад. Сам письменник стверджував, що «найкращі книги говорять тобі те, що ти вже сам знаєш». І роман-утопія «1984» описує речі, про які ми самі здогадувалися, але у існування яких боялися повірити.", "Джордж Орвелл", 312, "978-966-2355-57-4"),
 	("Кобзар", 2015, "кобзар.jpg", "До збірки, крім основних, увійшли твори, що їх було вилучено у різні часи царською, а згодом радянською цензурою. Наведено також біографічні й бібліографічні відомості та добірку афоризмів поета.", "Тарас Шевченко", 352, "966-8182-56-1"),

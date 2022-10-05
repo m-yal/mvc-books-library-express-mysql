@@ -17,7 +17,7 @@ const connection_1 = __importDefault(require("../models/utils/connection"));
 function getBook(req, res) {
     const bookId = req.params.bookId;
     console.log("Single book id: " + bookId);
-    connection_1.default.query(`SELECT * FROM books WHERE id = ${bookId} AND is_deleted = FALSE`, (err, result) => __awaiter(this, void 0, void 0, function* () {
+    connection_1.default.query(`SELECT * FROM books_v1 WHERE id = ${bookId} AND is_deleted = FALSE`, (err, result) => __awaiter(this, void 0, void 0, function* () {
         try {
             if (err) {
                 console.log(`Error during getting book by id: ${bookId}`);
@@ -36,7 +36,7 @@ function getBook(req, res) {
                 bookId: book.id
             };
             yield res.status(200);
-            yield res.render("book/index", data);
+            yield res.render("v1/book/index", data);
         }
         catch (error) {
             res.status(500);

@@ -27,7 +27,7 @@ exports.getBooks = getBooks;
 function getAll(req, res) {
     console.log("INSIDE GET ALL METHOD");
     const offset = req.query.offset || 0;
-    const sql = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${offset};`;
+    const sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${offset};`;
     console.log("SQL query: " + sql);
     connection_1.default.query(sql, (err, result) => __awaiter(this, void 0, void 0, function* () {
         if (err) {
@@ -35,32 +35,54 @@ function getAll(req, res) {
             res.status(500);
             return res.send({ error: "Error in database during getting books list: " + err });
         }
-        console.log(`Query result form file getting books: ${yield result}`);
-        yield res.status(200);
-        yield res.render("books/index", { books: yield result, searchQuery: null });
+        console.log(`Query result form getting books: ${yield result}`);
+        connection_1.default.query(`SELECT COUNT(*) AS count FROM books_v1 WHERE is_deleted = FALSE;`, (err, rowsCount) => __awaiter(this, void 0, void 0, function* () {
+            if (err) {
+                console.log("Error during getting count of rows in talbe during getting all: " + err);
+                res.status(500);
+                return res.send({ error: "Error during getting count of rows in talbe during getting all: " + err });
+            }
+            let hasPrevPage = false, hasNextPage = false;
+            const totalyFound = rowsCount[0].count;
+            console.log("totalyFound " + totalyFound);
+            const offsetAhead = +offset + LIMIT;
+            console.log(`offsetAhead ${offsetAhead}`);
+            const offsetBack = +offset - LIMIT;
+            console.log(`offsetBack ${offsetBack}`);
+            if (offsetAhead <= totalyFound)
+                hasNextPage = true;
+            if (offsetBack >= 0)
+                hasPrevPage = true;
+            yield res.status(200);
+            const pagesStatus = { hasPrevPage: hasPrevPage, hasNextPage: hasNextPage, totalyFound: totalyFound, offsetAhead: offsetAhead, offsetBack: offsetBack };
+            console.log(`hasPrevPage ${hasPrevPage}`);
+            console.log(`hasNextPage ${hasNextPage}`);
+            yield res.render("v1/books/index", { books: yield result, searchQuery: null, pagesStatus: pagesStatus });
+        }));
     }));
 }
 ;
 function search(req, res) {
     console.log("INSIDE SEARCH METHOD");
-    const { author, year, offset } = req.query;
+    const { author, year } = req.query;
+    const offset = req.query.offset || 0;
     const searchQuery = req.query.search;
     const authorQuery = author ? `autor_id = ${author}` : "";
     const yearQuery = year ? `year = ${year}` : "";
-    const offsetQuery = `LIMIT 20 OFFSET ${offset || 0}`;
+    const offsetQuery = `LIMIT ${LIMIT} OFFSET ${offset}`;
     let sql;
     if (!author && !year) {
-        sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
+        sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
     }
     else {
         if (author && year) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
+            sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
         }
         else if (author) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`;
+            sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`;
         }
         else {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
+            sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
         }
     }
     console.log("sql " + sql);
@@ -72,10 +94,33 @@ function search(req, res) {
         }
         console.log(`Query result form file getting books: ${yield result}`);
         console.log("search query: " + searchQuery);
-        yield res.status(200);
-        console.log("Status is set");
-        yield res.render("books/index", { books: yield result, searchQuery: searchQuery });
-        console.log("Response rendered");
+        const countSQL = sql.replace("*", "COUNT(*) AS count").replace("ORDER BY book_name ASC", "").replace(offsetQuery, "");
+        console.log("countSQL " + countSQL);
+        connection_1.default.query(countSQL, (err, rowsCount) => __awaiter(this, void 0, void 0, function* () {
+            if (err) {
+                console.log("Error during getting count of rows in talbe during getting all: " + err);
+                res.status(500);
+                return res.send({ error: "Error during getting count of rows in talbe during getting all: " + err });
+            }
+            let hasPrevPage = false, hasNextPage = false;
+            console.log("rowsCount " + rowsCount);
+            console.log("rowsCount[0] " + rowsCount[0]);
+            const totalyFound = rowsCount[0].count;
+            console.log("totalyFound " + totalyFound);
+            const offsetAhead = +offset + LIMIT;
+            console.log(`offsetAhead ${offsetAhead}`);
+            const offsetBack = +offset - LIMIT;
+            console.log(`offsetBack ${offsetBack}`);
+            if (offsetAhead <= totalyFound)
+                hasNextPage = true;
+            if (offsetBack >= 0)
+                hasPrevPage = true;
+            const pagesStatus = { hasPrevPage: hasPrevPage, hasNextPage: hasNextPage, totalyFound: totalyFound, offsetAhead: offsetAhead, offsetBack: offsetBack };
+            console.log(`hasPrevPage ${hasPrevPage}`);
+            console.log(`hasNextPage ${hasNextPage}`);
+            yield res.status(200);
+            yield res.render("v1/books/index", { books: yield result, searchQuery: searchQuery, pagesStatus: pagesStatus });
+        }));
     }));
 }
 ;

@@ -3,7 +3,7 @@ import connection from "../models/utils/connection";
 export function getBook(req: any, res: any) {
     const bookId: string = req.params.bookId;
     console.log("Single book id: " + bookId);
-    connection.query(`SELECT * FROM books WHERE id = ${bookId} AND is_deleted = FALSE`, async (err, result) => {
+    connection.query(`SELECT * FROM books_v1 WHERE id = ${bookId} AND is_deleted = FALSE`, async (err, result) => {
         try {    
             if (err) {
                 console.log(`Error during getting book by id: ${bookId}`);
@@ -22,7 +22,7 @@ export function getBook(req: any, res: any) {
                 bookId: book.id
             }
             await res.status(200);
-            await res.render("book/index", data);
+            await res.render("v1/book/index", data);
         } catch (error) {
             res.status(500);
         }
