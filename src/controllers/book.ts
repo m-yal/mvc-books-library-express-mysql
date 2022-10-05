@@ -8,7 +8,7 @@ export function getBook(req: any, res: any) {
             incrCounter("visits", req, res, bookId);
             await res.status(200);
             await res.render("v1/book/index", {book: result[0]});
-        } catch (error) {
+        } catch (err) {
             await res.status(500);
             await res.send({error: `Error in database during getting single book with id ${bookId}: ${err}`});
         }

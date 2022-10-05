@@ -24,7 +24,7 @@ function getBook(req, res) {
             yield res.status(200);
             yield res.render("v1/book/index", { book: result[0] });
         }
-        catch (error) {
+        catch (err) {
             yield res.status(500);
             yield res.send({ error: `Error in database during getting single book with id ${bookId}: ${err}` });
         }

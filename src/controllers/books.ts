@@ -11,40 +11,44 @@ export function getBooks(req: any, res: any) {
 }
 
 function getAll(req: any, res: any) {
-    console.log("INSIDE GET ALL METHOD");
     const offset = req.query.offset || 0;
     const sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${offset};`;
-    console.log("SQL query: " + sql);
     connection.query(sql, async (err, result) => {
-        if (err) {
-            console.log(`Error during getting all books with offset ${offset}`);
-            res.status(500);
-            return res.send({error: "Error in database during getting books list: " + err});
+        try {
+            if (err) throw err;
+            countBooksAmount(result, res, offset);
+        } catch (err) {
+            await res.status(500);
+            return await res.send({error: `Error in database during getting books list with offset ${offset} : ${err}`});            
         }
-        console.log(`Query result form getting books: ${await result}`);
-        connection.query(`SELECT COUNT(*) AS count FROM books_v1 WHERE is_deleted = FALSE;`, async (err, rowsCount) => {
-            if (err) {
-                console.log("Error during getting count of rows in talbe during getting all: " + err);
-                res.status(500);
-                return res.send({error: "Error during getting count of rows in talbe during getting all: " + err});
-            }
-            let hasPrevPage: boolean = false, hasNextPage: boolean = false;
-            const totalyFound: number = rowsCount[0].count;
-            console.log("totalyFound " + totalyFound);
-            const offsetAhead = +offset + LIMIT;
-            console.log(`offsetAhead ${offsetAhead}`);
-            const offsetBack = +offset - LIMIT;
-            console.log(`offsetBack ${offsetBack}`);
-            if (offsetAhead <= totalyFound) hasNextPage = true;
-            if (offsetBack >= 0) hasPrevPage = true;
-            await res.status(200);
-            const pagesStatus = {hasPrevPage: hasPrevPage, hasNextPage: hasNextPage, totalyFound: totalyFound, offsetAhead: offsetAhead, offsetBack: offsetBack};
-            console.log(`hasPrevPage ${hasPrevPage}`);
-            console.log(`hasNextPage ${hasNextPage}`);
-            await res.render("v1/books/index", {books: await result, searchQuery: null, pagesStatus: pagesStatus});
-        });
     });
 };
+
+function countBooksAmount(result: any, res: any, offset: any) {
+    const countSQL = `SELECT COUNT(*) AS count FROM books_v1 WHERE is_deleted = FALSE;`;
+    connection.query(countSQL, async (err, rowsCount) => {
+        try {
+            if (err) throw err;
+            const pagesStatus: any = assemblePagesStatusData(offset, await rowsCount[0].count);
+            await res.status(200);
+            await res.render("v1/books/index", {books: await result, searchQuery: null, pagesStatus: pagesStatus});
+        } catch (err) {
+            await res.status(500);
+            return await res.send({error: "Error during getting count of rows in talbe during getting book list: " + err});
+        }
+    });
+}
+
+function assemblePagesStatusData(offset: any, count: any) {
+    const pagesStatus: any = {
+        offsetAhead: +offset + LIMIT,
+        offsetBack: +offset - LIMIT,
+        totalyFound: count,
+    }
+    pagesStatus.hasNextPage = pagesStatus.offsetAhead <= pagesStatus.totalyFound
+    pagesStatus.hasPrevPage = pagesStatus.offsetBack >= 0;
+    return pagesStatus;
+}
 
 function search(req: any, res: any) {
     console.log("INSIDE SEARCH METHOD");
