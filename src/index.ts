@@ -19,18 +19,13 @@ connection;
 app.use(express.static("public"));
 
 const storage = multer.diskStorage({
-    destination: (req, image, cb) => {
-        cb(null, './public/upload/');
-        console.log("destination for files set...");
-    },
-    filename: (req, image, cb) => {
-        cb(null, Date.now() + path.extname(image.originalname));
-    }
+    destination: (req, image, cb) => cb(null, './public/images/'),
+    filename: (req, image, cb) => cb(null, Date.now() + path.extname(image.originalname))
 })
 export const upload = multer({storage: storage});
 
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 import adminRouterV1 from "./routes/v1/admin";
 

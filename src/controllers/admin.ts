@@ -1,5 +1,4 @@
 import connection from "../models/utils/connection";
-import { upload } from "../index";
 
 const LIMIT: number = 20;
 
@@ -44,25 +43,20 @@ async function definePagesAmount(res: any, books: any, offset: any) {
 }
 
 export async function addBook(req: any, res: any) {
-    console.log("INSIDE addBook method");
-    const book = await req.body;
-    console.log("req.body " + await book);
-    const image = await req.file;
-    console.log("req.file " + await image);
-    res.status(200);
-    await res.send();
+    connection.query(assembleAddBookSqlQuery(req), async (err, result) => {
+        try {
+            if (err) throw err;
+            await res.status(200);
+            await res.redirect("http://localhost:3005/api/v1/admin/"); 
+        } catch (err) {
+            await res.status(500);
+            return await res.send({error: "Error in database during adding new book: " + err});
+        }
+    });
+}
 
-
-
-    // const sql = `INSERT INTO books_v1(book_name, publish_year, image_path, book_description, author)
-    //     VALUES (${bookName}, ${publishYear}, ${imagePath}, ${bookDesc}, ${author})`;
-    // connection.query(sql, (err, result) => {
-    //     if (err) {
-    //         console.log(`Error during adding new book: ${req.body}`);
-    //         res.status(500);
-    //         return res.send({error: "Error in database during adding new book"});
-    //     }
-    //     console.log(`Query executed`);
-    //     res.send({result: result}); // clear prompt/send new books page for admin
-    // });
+function assembleAddBookSqlQuery(req: any) {
+    const {bookName, publishYear, author, description} = req.body;
+    const imagePath = req.file?.filename || null;
+    return `INSERT INTO books_v1(book_name, publish_year, image_path, book_description, author) VALUES ('${bookName}', ${publishYear}, '${imagePath}', '${description}', '${author}');`;
 }

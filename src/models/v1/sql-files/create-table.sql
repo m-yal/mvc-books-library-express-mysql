@@ -1,12 +1,12 @@
 CREATE TABLE IF NOT EXISTS books_v1 (
     id int PRIMARY KEY AUTO_INCREMENT,
-    book_name varchar(255) UNIQUE,
+    book_name varchar(255),
     publish_year smallint,
-    image_path varchar(255) UNIQUE,
+    image_path varchar(255),
     book_description text,
     author varchar(255),
-    pages INT,
-    isbn varchar(255),
+    pages INT DEFAULT 0,
+    isbn varchar(255) DEFAULT "-",
     is_deleted BOOLEAN DEFAULT FALSE,
     visits INT DEFAULT 0,
     wants INT DEFAULT 0

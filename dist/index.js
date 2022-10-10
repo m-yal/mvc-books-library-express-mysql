@@ -19,17 +19,12 @@ exports.app.set('view engine', 'ejs');
 connection_1.default;
 exports.app.use(express_1.default.static("public"));
 const storage = multer_1.default.diskStorage({
-    destination: (req, image, cb) => {
-        cb(null, './public/upload/');
-        console.log("destination for files set...");
-    },
-    filename: (req, image, cb) => {
-        cb(null, Date.now() + path_1.default.extname(image.originalname));
-    }
+    destination: (req, image, cb) => cb(null, './public/images/'),
+    filename: (req, image, cb) => cb(null, Date.now() + path_1.default.extname(image.originalname))
 });
 exports.upload = (0, multer_1.default)({ storage: storage });
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
+exports.app.use(express_1.default.json());
+exports.app.use(express_1.default.urlencoded({ extended: true }));
 const admin_1 = __importDefault(require("./routes/v1/admin"));
 // v1 routes
 exports.app.use("/api/v1", books_1.default); //get list of books

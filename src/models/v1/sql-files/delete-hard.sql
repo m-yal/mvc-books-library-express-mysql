@@ -1,0 +1,1 @@
+DELETE FROM books_v1 WHERE is_deleted=true;

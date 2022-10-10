@@ -64,24 +64,24 @@ function definePagesAmount(res, books, offset) {
 }
 function addBook(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("INSIDE addBook method");
-        const book = yield req.body;
-        console.log("req.body " + (yield book));
-        const image = yield req.file;
-        console.log("req.file " + (yield image));
-        res.status(200);
-        yield res.send();
-        // const sql = `INSERT INTO books_v1(book_name, publish_year, image_path, book_description, author)
-        //     VALUES (${bookName}, ${publishYear}, ${imagePath}, ${bookDesc}, ${author})`;
-        // connection.query(sql, (err, result) => {
-        //     if (err) {
-        //         console.log(`Error during adding new book: ${req.body}`);
-        //         res.status(500);
-        //         return res.send({error: "Error in database during adding new book"});
-        //     }
-        //     console.log(`Query executed`);
-        //     res.send({result: result}); // clear prompt/send new books page for admin
-        // });
+        connection_1.default.query(assembleAddBookSqlQuery(req), (err, result) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                if (err)
+                    throw err;
+                yield res.status(200);
+                yield res.redirect("http://localhost:3005/api/v1/admin/");
+            }
+            catch (err) {
+                yield res.status(500);
+                return yield res.send({ error: "Error in database during adding new book: " + err });
+            }
+        }));
     });
 }
 exports.addBook = addBook;
+function assembleAddBookSqlQuery(req) {
+    var _a;
+    const { bookName, publishYear, author, description } = req.body;
+    const imagePath = ((_a = req.file) === null || _a === void 0 ? void 0 : _a.filename) || null;
+    return `INSERT INTO books_v1(book_name, publish_year, image_path, book_description, author) VALUES ('${bookName}', ${publishYear}, '${imagePath}', '${description}', '${author}');`;
+}
