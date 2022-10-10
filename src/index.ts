@@ -4,19 +4,37 @@ import {bookRouter as singleBookRouterV1} from "./routes/v1/book";
 import authRouterV1 from "./routes/v1/auth";
 import dotenv from "dotenv";
 import connection from "./models/utils/connection";
-import adminRouterV1 from "./routes/v1/admin";
 import path from "path";
-
+import multer from "multer";
 
 export const app = express();
+
 dotenv.config();
 
 app.set("views", path.join(__dirname, "../src", "views"))
 app.set('view engine', 'ejs');
 
 connection;
+
 app.use(express.static("public"));
 
+const storage = multer.diskStorage({
+    destination: (req, image, cb) => {
+        cb(null, './public/upload/');
+        console.log("destination for files set...");
+    },
+    filename: (req, image, cb) => {
+        cb(null, Date.now() + path.extname(image.originalname));
+    }
+})
+export const upload = multer({storage: storage});
+
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+import adminRouterV1 from "./routes/v1/admin";
+
+// v1 routes
 app.use("/api/v1", booksRouterV1); //get list of books
 app.use("/api/v1", singleBookRouterV1); //get single book
 app.use("/api/v1", authRouterV1);

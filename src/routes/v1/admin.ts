@@ -1,11 +1,11 @@
 import express from "express";
-import { deleteBook, getBooks, getBook, addBook } from "../../controllers/admin";
+import { upload } from "../../index";
+import { deleteBook, getBooks, addBook } from "../../controllers/admin";
 
 const adminRouter = express.Router();
 
-adminRouter.delete("/admin/books/:bookId", deleteBook);
-adminRouter.get("/admin/books", getBooks);
-adminRouter.get("/admin/books/:bookId", getBook);
-adminRouter.get("/admin/books/add", addBook);
+adminRouter.delete("/admin/delete/:id", deleteBook);
+adminRouter.get("/admin", getBooks);
+adminRouter.post("/admin/add", upload.single("image"), addBook);
 
 export default adminRouter;

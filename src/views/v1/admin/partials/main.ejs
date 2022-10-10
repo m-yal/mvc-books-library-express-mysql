@@ -1,0 +1,70 @@
+    <div class="books-table" >
+        <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Название книги</th>
+                <th scope="col">Автор</th> <!-- for v1 only 1 author-->
+                <th scope="col">Год</th>
+                <th scope="col">Действия</th>
+                <th scope="col">Визитов</th>
+                <th scope="col">Кликов "Хочу"</th>
+              </tr>
+            </thead>
+            <tbody>
+                <% for (let i = 0; i < books.length; i++) { %>
+                    <tr>
+                        <th scope="row">
+                            <img src="/images/<%= books[i].image_path %>" alt="<%= books[i].book_name %>" style="width: auto; height: 64px;">
+                            <%= books[i].book_name %>
+                        </th>
+                        <td><%= books[i].author %></td>
+                        <td><%= books[i].publish_year %></td>
+                        <td>
+                            <button id="<%= books[i].id %>" onclick="deleteBook(String(this.id))">Удалить</button>
+                        </td>
+                        <td><%= books[i].visits %></td>
+                        <td><%= books[i].wants %></td>
+                    </tr>
+                <% } %>
+            </tbody>
+          </table>
+          <nav aria-label="Page navigation example">
+            <ul class="pagination">
+                <% for (let i = 0; i < pagesAmount; i++) { %>
+                    <% let pageToPrint = i + 1%>
+                    <% if (i === currentPage - 1) { %>
+                        <li class="page-item"><a class="page-link" style="color:red"><%= pageToPrint %></a></li>
+                    <% } else { %>
+                        <li class="page-item"><a class="page-link" href="http://localhost:3005/api/v1/admin/?offset=<%= i * 20 %>"><%= pageToPrint %></a></li>
+                    <% } %>
+                <% } %>
+            </ul>
+          </nav>
+    </div>
+        
+    <div>
+        <form id="add-book" method="post" enctype='multipart/form-data' action='http://localhost:3005/api/v1/admin/add'>
+            <div class="mb-3">
+              <label for="bookName" class="form-label">Название книги</label>
+              <input type="bookName" id="name" class="form-control" name="bookName">
+            </div>
+            <div class="mb-3">
+                <label for="publishYear" class="form-label">Год издания</label>
+                <input type="publishYear" id="year" class="form-control" name="publishYear">
+            </div>
+            <div class="mb-3">
+                <label for="author" class="form-label">Автор</label>
+                <input type="author" id="author" class="form-control" name="author">
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Описание</label>
+                <input type="description" id="description" class="form-control" name="description">
+            </div>
+            <div class="mb-3">
+                <label for="image" class="form-label">Изображение</label>
+                <input class="form-control" id="image" type="file" name="image">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Добавить ></button>
+        </form>
+    </div>

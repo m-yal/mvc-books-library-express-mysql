@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include("./partials/head") %>
+</head>
+<body>
+    <header style="display: flex; justify-content: space-between;">
+        <%- include("./partials/header") %>
+    </header>
+    <main>
+        <%- include("./partials/main", {books: books, pagesAmount: pagesAmount, currentPage: currentPage}) %>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3" crossorigin="anonymous"></script>
+    <script>
+        async function logout() {
+            const response = await fetch("http://localhost:3005/api/v1/auth/logout", {method: "POST"});
+            if (response.ok) window.location.href = "http://localhost:3005/api/v1/";
+        }
+        async function deleteBook(id) {
+            const bookID = Number.parseInt(id);
+            const response = await fetch(`http://localhost:3005/api/v1/admin/delete/${bookID}`, {method: "DELETE"});
+            if (response.ok) window.location.href = `http://localhost:3005/api/v1/admin/`;
+        }
+
+
+        // const form = document.getElementById("add-book");
+
+        // form.addEventListener("submit", submitForm);
+
+        async function submitForm(e) {
+            e.preventDefault();
+
+            // const name = document.getElementById("name").value;
+            // const year = document.getElementById("year");
+            // const author = document.getElementById("author");
+            // const description = document.getElementById("description");
+            // const image = document.getElementById("image");
+
+            const book =  {
+                name: document.getElementById("name").value,
+                year: document.getElementById("year").value,
+                author: document.getElementById("author").value,
+                description: document.getElementById("description").value,
+                image: document.getElementById("image").value
+            }
+
+            // const formData = new FormData();
+            // formData.append("name", name.value);
+            // formData.append("year", year.value);
+            // formData.append("author", author.value);
+            // formData.append("description", description.value);
+            // formData.append("image", image.value);
+            // await alert("form Data " + JSON.stringify(formData));
+
+
+            await fetch("http://localhost:3005/api/v1/admin/add", {
+                method: 'POST',
+                body: book
+            })
+                .then((res) => alert(JSON.stringify(res)))
+                .catch((err) => ("Error occured", err));
+        }
+    </script>
+</body>
+</html>

@@ -11,8 +11,10 @@ export function login(req: any, res: any) {
     }
 }
 
-export function logout(req: any, res: any) {
-    //move to get all page
+export async function logout(req: any, res: any) {
+    //terminate session here and only then => 200
+    await res.status(200);
+    await res.send({ok: true});
 }
 
 function check(name: string, pass: string): boolean {
