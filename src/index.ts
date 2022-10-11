@@ -10,6 +10,8 @@ import multer from "multer";
 export const app = express();
 
 dotenv.config();
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.set("views", path.join(__dirname, "../src", "views"))
 app.set('view engine', 'ejs');
@@ -24,12 +26,8 @@ const storage = multer.diskStorage({
 })
 export const upload = multer({storage: storage});
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-import adminRouterV1 from "./routes/v1/admin";
-
 // v1 routes
+import adminRouterV1 from "./routes/v1/admin";
 app.use("/api/v1", booksRouterV1); //get list of books
 app.use("/api/v1", singleBookRouterV1); //get single book
 app.use("/api/v1", authRouterV1);

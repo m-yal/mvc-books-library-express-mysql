@@ -8,24 +8,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.logout = exports.login = void 0;
-const basic_auth_1 = __importDefault(require("basic-auth"));
+exports.login = exports.logout = exports.getAuthPage = void 0;
 const express_basic_auth_1 = require("express-basic-auth");
-function login(req, res) {
-    const credentials = (0, basic_auth_1.default)(req);
-    if (!credentials || !check(credentials.name, credentials.pass)) {
-        res.status(401);
-        res.send({ error: "Access denied" });
-    }
-    else {
-        //send admin page        
-    }
+function getAuthPage(req, res) {
+    res.status(200);
+    res.render("v1/auth/index");
 }
-exports.login = login;
+exports.getAuthPage = getAuthPage;
 function logout(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         //terminate session here and only then => 200
@@ -34,8 +24,25 @@ function logout(req, res) {
     });
 }
 exports.logout = logout;
-function check(name, pass) {
+function login(req, res) {
+    const { login, password } = req.body;
+    if (check(login, password)) {
+        if (login === "me" && password === "111") {
+            res.redirect("http://localhost:3005/api/v1/admin");
+        }
+        else {
+            res.status(401);
+            res.redirect("http://localhost:3005/api/v1/auth");
+        }
+    }
+    else {
+        res.status(401);
+        res.redirect("http://localhost:3005/api/v1/auth");
+    }
+}
+exports.login = login;
+function check(login, pass) {
     let valid = true;
-    valid = (0, express_basic_auth_1.safeCompare)(name, process.env.LOGIN + "") && valid;
+    valid = (0, express_basic_auth_1.safeCompare)(login, process.env.LOGIN + "") && valid;
     return (0, express_basic_auth_1.safeCompare)(pass, process.env.PASS + "") && valid;
 }

@@ -14,6 +14,8 @@ const path_1 = __importDefault(require("path"));
 const multer_1 = __importDefault(require("multer"));
 exports.app = (0, express_1.default)();
 dotenv_1.default.config();
+exports.app.use(express_1.default.urlencoded({ extended: true }));
+exports.app.use(express_1.default.json());
 exports.app.set("views", path_1.default.join(__dirname, "../src", "views"));
 exports.app.set('view engine', 'ejs');
 connection_1.default;
@@ -23,10 +25,8 @@ const storage = multer_1.default.diskStorage({
     filename: (req, image, cb) => cb(null, Date.now() + path_1.default.extname(image.originalname))
 });
 exports.upload = (0, multer_1.default)({ storage: storage });
-exports.app.use(express_1.default.json());
-exports.app.use(express_1.default.urlencoded({ extended: true }));
-const admin_1 = __importDefault(require("./routes/v1/admin"));
 // v1 routes
+const admin_1 = __importDefault(require("./routes/v1/admin"));
 exports.app.use("/api/v1", books_1.default); //get list of books
 exports.app.use("/api/v1", book_1.bookRouter); //get single book
 exports.app.use("/api/v1", auth_1.default);
