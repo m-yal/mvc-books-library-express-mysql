@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const execute_1 = __importDefault(require("../../utils/execute"));
 function createTables() {
-    (0, execute_1.default)("create-table.sql");
+    (0, execute_1.default)("create-table.sql", "v1");
 }
 exports.default = createTables;
 ;

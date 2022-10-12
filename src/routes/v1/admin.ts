@@ -1,6 +1,6 @@
 import express from "express";
 import { upload } from "../../index";
-import { deleteBook, getBooks, addBook } from "../../controllers/admin";
+import { deleteBook, getBooks, addBook } from "../../controllers/v1/admin";
 
 const adminRouter = express.Router();
 

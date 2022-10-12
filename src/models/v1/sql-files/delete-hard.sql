@@ -1,1 +1,1 @@
-DELETE FROM books_v1 WHERE is_deleted=true;
+DELETE FROM books WHERE is_deleted=true;

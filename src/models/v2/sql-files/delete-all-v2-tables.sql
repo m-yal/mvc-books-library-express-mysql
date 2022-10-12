@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS books_v2;
+DROP TABLE IF EXISTS authors_v2;
+DROP TABLE IF EXISTS books_authors_v2;

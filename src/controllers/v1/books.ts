@@ -12,7 +12,7 @@ export function getBooks(req: any, res: any) {
 
 function getAll(req: any, res: any) {
     const offset = req.query.offset || 0;
-    const sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${offset};`;
+    const sql = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${offset};`;
     connection.query(sql, async (err, result) => {
         try {
             if (err) throw err;
@@ -26,7 +26,7 @@ function getAll(req: any, res: any) {
 
 function countBooksAmount(result: any, res: any, offset: any, searchQuery: string | null, sql: string, req: any) {
     const foundBooksCountSQLQuery = (typeof searchQuery === null) ?
-        `SELECT COUNT(*) AS count FROM books_v1 WHERE is_deleted = FALSE;`
+        `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`
         : composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${req.query.offset}`);
     connection.query(foundBooksCountSQLQuery, async (err, rowsCount) => {
         try {
@@ -73,14 +73,14 @@ function composeSLQQuery(author: string, year: string, offset: string, searchQue
     const yearQuery = year ? `year = ${year}` : "";
     const offsetQuery = `LIMIT ${LIMIT} OFFSET ${offset}`;
     if (!author && !year) {
-        sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
+        sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
     } else {
         if (author && year) {
-            sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
+            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
         } else if (author) {
-            sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`
+            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`
         } else {
-            sql = `SELECT * FROM books_v1 WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
+            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
         }
     }
     return sql;

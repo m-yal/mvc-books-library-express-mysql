@@ -1,1 +1,0 @@
-DROP TABLE books_v1;

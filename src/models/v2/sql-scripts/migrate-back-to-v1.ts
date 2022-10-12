@@ -1,7 +1,8 @@
 import executeSQLFile from "../../utils/execute";
 
 export default function createTables() {
-    executeSQLFile("create-table.sql", "v1");
+    executeSQLFile("move-data-to-v1-tables.sql", "v2");
+    executeSQLFile("delete-all-v2-tables.sql", "v2");
 };
 
 createTables();

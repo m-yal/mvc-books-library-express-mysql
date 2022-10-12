@@ -16,7 +16,7 @@ exports.wantBook = exports.getBook = void 0;
 const connection_1 = __importDefault(require("../models/utils/connection"));
 function getBook(req, res) {
     const bookId = req.params.bookId;
-    connection_1.default.query(`SELECT * FROM books_v1 WHERE id = ${bookId} AND is_deleted = FALSE`, (err, result) => __awaiter(this, void 0, void 0, function* () {
+    connection_1.default.query(`SELECT * FROM books WHERE id = ${bookId} AND is_deleted = FALSE`, (err, result) => __awaiter(this, void 0, void 0, function* () {
         try {
             if (err)
                 throw err;
@@ -38,7 +38,7 @@ function wantBook(req, res) {
 }
 exports.wantBook = wantBook;
 function incrCounter(type, req, res, bookId) {
-    const sql = `UPDATE books_v1 SET ${type} = ${type} + 1 WHERE id = ${bookId}`;
+    const sql = `UPDATE books SET ${type} = ${type} + 1 WHERE id = ${bookId}`;
     connection_1.default.query(sql, (err) => __awaiter(this, void 0, void 0, function* () {
         try {
             if (err)

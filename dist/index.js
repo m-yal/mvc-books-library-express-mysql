@@ -12,12 +12,25 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const connection_1 = __importDefault(require("./models/utils/connection"));
 const path_1 = __importDefault(require("path"));
 const multer_1 = __importDefault(require("multer"));
+const uuid_1 = require("uuid");
+const express_session_1 = __importDefault(require("express-session"));
 exports.app = (0, express_1.default)();
 dotenv_1.default.config();
 exports.app.use(express_1.default.urlencoded({ extended: true }));
 exports.app.use(express_1.default.json());
 exports.app.set("views", path_1.default.join(__dirname, "../src", "views"));
 exports.app.set('view engine', 'ejs');
+exports.app.use((0, express_session_1.default)({
+    name: "sid",
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+    genid: function (req) {
+        const sid = (0, uuid_1.v4)();
+        console.log('Session id created: ' + sid);
+        return sid;
+    },
+}));
 connection_1.default;
 exports.app.use(express_1.default.static("public"));
 const storage = multer_1.default.diskStorage({

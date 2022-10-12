@@ -2,7 +2,7 @@ import connection from "../models/utils/connection";
 
 export function getBook(req: any, res: any) {
     const bookId: string = req.params.bookId;
-    connection.query(`SELECT * FROM books_v1 WHERE id = ${bookId} AND is_deleted = FALSE`, async (err, result) => {
+    connection.query(`SELECT * FROM books WHERE id = ${bookId} AND is_deleted = FALSE`, async (err, result) => {
         try {    
             if (err) throw err;
             incrCounter("visits", req, res, bookId);
@@ -22,7 +22,7 @@ export function wantBook(req: any, res: any) {
 }
 
 function incrCounter(type: "visits" | "wants", req: any, res: any, bookId: string) {
-    const sql: string = `UPDATE books_v1 SET ${type} = ${type} + 1 WHERE id = ${bookId}`;
+    const sql: string = `UPDATE books SET ${type} = ${type} + 1 WHERE id = ${bookId}`;
     connection.query(sql, async (err) => {
         try {
             if (err) throw err; 

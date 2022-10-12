@@ -8,8 +8,8 @@ const path_1 = __importDefault(require("path"));
 const connection_1 = __importDefault(require("./connection"));
 const fs_1 = __importDefault(require("fs"));
 // Executes only one file by session
-function executeSQLFile(sqlFileName) {
-    const queries = readSQLFile(sqlFileName);
+function executeSQLFile(sqlFileName, version) {
+    const queries = readSQLFile(sqlFileName, version);
     connection_1.default.query(queries, function (err, result) {
         if (err) {
             console.log(`Error during initTables.ts with file ${sqlFileName} query script work`);
@@ -21,8 +21,8 @@ function executeSQLFile(sqlFileName) {
 }
 exports.default = executeSQLFile;
 ;
-function readSQLFile(sqlFileName) {
-    const sqlPath = path_1.default.join(__dirname, "../../../src/models/v1/sql-files", sqlFileName);
+function readSQLFile(sqlFileName, version) {
+    const sqlPath = path_1.default.join(__dirname, `../../../src/models/${version}/sql-files`, sqlFileName);
     return fs_1.default.readFileSync(sqlPath).toString();
 }
 exports.readSQLFile = readSQLFile;

@@ -4,9 +4,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const execute_1 = __importDefault(require("../../utils/execute"));
-function deleteAll() {
-    (0, execute_1.default)("delete-all-v1-tables.sql", "v1");
+function createTables() {
+    (0, execute_1.default)("move-data-to-v1-tables.sql", "v2");
+    (0, execute_1.default)("delete-all-v2-tables.sql", "v2");
 }
-exports.default = deleteAll;
+exports.default = createTables;
 ;
-deleteAll();
+createTables();

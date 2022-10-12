@@ -6,6 +6,8 @@ import dotenv from "dotenv";
 import connection from "./models/utils/connection";
 import path from "path";
 import multer from "multer";
+import { v4 as uuidv4 } from 'uuid';
+import session from "express-session";
 
 export const app = express();
 
@@ -15,6 +17,18 @@ app.use(express.json());
 
 app.set("views", path.join(__dirname, "../src", "views"))
 app.set('view engine', 'ejs');
+
+app.use(session({
+    name: "sid",
+    secret: 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+    genid: function(req) {
+        const sid = uuidv4();
+        console.log('Session id created: ' + sid);
+        return sid;
+    },
+}))
 
 connection;
 
