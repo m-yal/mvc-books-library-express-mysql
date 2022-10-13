@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.addBook = exports.getBooks = exports.deleteBook = void 0;
-const connection_1 = __importDefault(require("../models/utils/connection"));
+const connection_1 = __importDefault(require("../../models/utils/connection"));
 const LIMIT = 20;
 function deleteBook(req, res) {
     const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
@@ -135,7 +135,6 @@ function addBook(req, res) {
 exports.addBook = addBook;
 function addBookQuery(req, res) {
     connection_1.default.query(assembleAddBookSqlQuery(req), (err, result) => __awaiter(this, void 0, void 0, function* () {
-        console.log("INSIDE addBookQuery");
         try {
             if (err)
                 throw err;
@@ -150,7 +149,7 @@ function addBookQuery(req, res) {
 }
 function assembleAddBookSqlQuery(req) {
     var _a;
-    const { bookName, publishYear, author, description } = req.body;
+    const { bookName, publishYear, author_1, author_2, author_3, description } = req.body;
     const imagePath = ((_a = req.file) === null || _a === void 0 ? void 0 : _a.filename) || null;
-    return `INSERT INTO books(book_name, publish_year, image_path, book_description, author) VALUES ('${bookName}', ${publishYear || 0}, '${imagePath}', '${description}', '${author}');`;
+    return `INSERT INTO books(book_name, publish_year, image_path, book_description, author_1, author_2, author_3) VALUES ('${bookName}', ${publishYear || 0}, '${imagePath}', '${description}', '${author_1}', '${author_2}', '${author_3}');`;
 }

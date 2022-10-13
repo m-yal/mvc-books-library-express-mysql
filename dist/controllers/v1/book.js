@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.wantBook = exports.getBook = void 0;
-const connection_1 = __importDefault(require("../models/utils/connection"));
+const connection_1 = __importDefault(require("../../models/utils/connection"));
 function getBook(req, res) {
     const bookId = req.params.bookId;
     connection_1.default.query(`SELECT * FROM books WHERE id = ${bookId} AND is_deleted = FALSE`, (err, result) => __awaiter(this, void 0, void 0, function* () {

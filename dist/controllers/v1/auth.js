@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.login = exports.logout = exports.getAuthPage = void 0;
 const express_basic_auth_1 = require("express-basic-auth");
-const connection_1 = __importDefault(require("../models/utils/connection"));
+const connection_1 = __importDefault(require("../../models/utils/connection"));
 function getAuthPage(req, res) {
     res.status(200);
     res.render("v1/auth/index");

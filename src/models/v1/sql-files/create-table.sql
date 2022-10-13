@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS books (
-    id int PRIMARY KEY AUTO_INCREMENT,
+    id INT PRIMARY KEY AUTO_INCREMENT,
     book_name varchar(255),
     publish_year smallint,
     image_path varchar(255),

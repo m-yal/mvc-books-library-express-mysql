@@ -13,7 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBooks = void 0;
-const connection_1 = __importDefault(require("../models/utils/connection"));
+const connection_1 = __importDefault(require("../../models/utils/connection"));
 const LIMIT = 20;
 function getBooks(req, res) {
     if (typeof req.query.search === "string") {

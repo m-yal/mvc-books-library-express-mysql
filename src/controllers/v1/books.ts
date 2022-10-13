@@ -1,4 +1,4 @@
-import connection from "../models/utils/connection";
+import connection from "../../models/utils/connection";
 
 const LIMIT: number = 20;
 

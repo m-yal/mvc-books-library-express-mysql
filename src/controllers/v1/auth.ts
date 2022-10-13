@@ -1,5 +1,5 @@
 import { safeCompare } from "express-basic-auth";
-import connection from "../models/utils/connection";
+import connection from "../../models/utils/connection";
 import { Request, Response } from "express";
 
 export function getAuthPage(req: any, res: any) {
