@@ -21,8 +21,9 @@ function executeSQLFile(sqlFileName, version) {
     return __awaiter(this, void 0, void 0, function* () {
         const queries = readSQLFile(sqlFileName, version);
         try {
-            (yield connection_1.default).query(queries);
-            (yield connection_1.default).end();
+            let conn = yield connection_1.default;
+            conn.query(queries);
+            conn.end();
             console.log("SQL files executed, connection ended");
         }
         catch (err) {
