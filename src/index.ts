@@ -2,6 +2,9 @@ import express from "express";
 import booksRouterV1 from "./routes/v1/books";
 import {bookRouter as singleBookRouterV1} from "./routes/v1/book";
 import authRouterV1 from "./routes/v1/auth";
+import booksRouterV2 from "./routes/v2/books";
+import {bookRouter as singleBookRouterV2} from "./routes/v2/book";
+import authRouterV2 from "./routes/v2/auth";
 import dotenv from "dotenv";
 import connection from "./models/utils/connection";
 import path from "path";
@@ -46,6 +49,13 @@ app.use("/api/v1", booksRouterV1); //get list of books
 app.use("/api/v1", singleBookRouterV1); //get single book
 app.use("/api/v1", authRouterV1);
 app.use("/api/v1", adminRouterV1);
+
+// v2 routes
+import adminRouterV2 from "./routes/v2/admin";
+app.use("", booksRouterV2); //get list of books
+app.use("", singleBookRouterV2); //get single book
+app.use("", authRouterV2);
+app.use("", adminRouterV2);
 
 app.use(function(req, res, next) {
     res.status(404).send({error: "Not Found Page"});

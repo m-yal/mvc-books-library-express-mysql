@@ -1,4 +1,5 @@
-import mysql from "mysql";
+// import mysql from "mysql2";
+import mysql from "mysql2/promise";
 
 const connection = mysql.createConnection({
     host: "localhost",
@@ -8,13 +9,13 @@ const connection = mysql.createConnection({
     multipleStatements: true
 });
 
-connection.connect((err: Error) => {
-    if (err) {
-        console.log(err);
-        return err;
-    } else {
-        console.log("Database connection status ------------ OK");
-    }
-});
+// connection.connect((err: Error) => {
+//     if (err) {
+//         console.log(err);
+//         return err;
+//     } else {
+//         console.log("Database connection status ------------ OK");
+//     }
+// });  
 
 export default connection;
