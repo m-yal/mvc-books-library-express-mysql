@@ -8,6 +8,9 @@ const express_1 = __importDefault(require("express"));
 const books_1 = __importDefault(require("./routes/v1/books"));
 const book_1 = require("./routes/v1/book");
 const auth_1 = __importDefault(require("./routes/v1/auth"));
+const books_2 = __importDefault(require("./routes/v2/books"));
+const book_2 = require("./routes/v2/book");
+const auth_2 = __importDefault(require("./routes/v2/auth"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const connection_1 = __importDefault(require("./models/utils/connection"));
 const path_1 = __importDefault(require("path"));
@@ -44,6 +47,12 @@ exports.app.use("/api/v1", books_1.default); //get list of books
 exports.app.use("/api/v1", book_1.bookRouter); //get single book
 exports.app.use("/api/v1", auth_1.default);
 exports.app.use("/api/v1", admin_1.default);
+// v2 routes
+const admin_2 = __importDefault(require("./routes/v2/admin"));
+exports.app.use("", books_2.default); //get list of books
+exports.app.use("", book_2.bookRouter); //get single book
+exports.app.use("", auth_2.default);
+exports.app.use("", admin_2.default);
 exports.app.use(function (req, res, next) {
     res.status(404).send({ error: "Not Found Page" });
 });
