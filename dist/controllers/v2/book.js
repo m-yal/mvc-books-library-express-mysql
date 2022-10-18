@@ -18,12 +18,11 @@ function getBook(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const bookId = req.params.bookId;
         try {
-            const queries = [
+            yield Promise.all([
                 queryBookById(req, res, bookId),
                 queryAuthors(req, res, bookId),
                 incrCounter("visits", req, res, bookId)
-            ];
-            yield Promise.all(queries);
+            ]);
         }
         catch (err) {
             yield res.status(500);
@@ -92,7 +91,14 @@ function wantBook(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const bookId = req.params.bookId;
         console.log("Wants single book with id: " + bookId);
-        incrCounter("wants", req, res, bookId);
+        incrCounter("wants", req, res, bookId)
+            .then(result => {
+            res.status(200);
+            res.end();
+        }).catch(err => {
+            res.status(500);
+            res.end({ error: err });
+        });
     });
 }
 exports.wantBook = wantBook;
