@@ -15,66 +15,51 @@ export async function getBooks(req: any, res: any) {
 export async function getAll(req: any, res: any, isAdmin: boolean) {
     res.locals.offset = req.query.offset || 0;
     const sql = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${res.locals.offset};`;
-    (await connection).query(sql)
-        .then(async result => {
-            res.locals.books = result[0];
-            console.log("GET ALL QUERY RESULT[0]: " + JSON.stringify(result[0]));
-            await countBooksAmount(res, sql, req);
-            const authorsQueries = [];
-            for (let i = 0; i < res.locals.books.length; i++) {
-                authorsQueries.push(queryAuthorsNames(req, res, res.locals.books[i]));
-            }
-            await Promise.all([authorsQueries]);
-            await res.status(200);
-            if (isAdmin) { //or ternary
-                // return res.render...
-            }  
-            //render...
-            return await res.send({books: await res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
-        })
-        .catch(async err => {
-            await res.status(500);
-            return await res.send({error: `Error in database during getting books list with offset ${res.locals.offset} : ${err}`})
-        });
+    const [booksData] = await (await connection).query(sql);
+    res.locals.books = booksData;
+    await countBooksAmount(res, sql, req);
+    const authorsQueries = [];
+    for (const item of res.locals.books) {
+        authorsQueries.push(await queryAuthorsNames(req, res, item));
+    }
+    await Promise.all([authorsQueries]);
+    await res.status(200);
+    if (isAdmin) { //or ternary
+        //         await res.status(200);
+        //         await res.render("v1/books/index", {books: await result, searchQuery: searchQuery, pagesStatus: pagesStatus});
+        return await res.send({books: await res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
+    }  
+    //         await res.status(200);
+    //         await res.render("v1/books/index", {books: await result, searchQuery: searchQuery, pagesStatus: pagesStatus});
+    return await res.send({books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
 };
 
 async function queryAuthorsNames(req: any, res: any, book: any) {
     console.log("QUERY AUTHOR BOOK ID: " + book.id);
-    (await connection).query(`SELECT author_id FROM books_authors WHERE book_id = ${book.id};`)
-        .then(async result => {
-            const authorsIds: any = result[0];
-            console.log(`BOOK WITH ID ${book.id} have next authors ids ${authorsIds}`);
-
-            book.authors = [];
-
-            for (let i = 0; i < authorsIds.length; i++) {
-                await querySingleAuthorName(req, res, book, authorsIds[i]);// need to stay sync
-            }
-        })
-        .catch(err => {
-            console.log("Error during querying authors names for book with id: " + book.id);
-            throw err;
-        }) 
+    const [ authorsIds ]: any = await (await connection).execute(`SELECT author_id FROM books_authors WHERE book_id = ${book.id};`);
+    console.log("authorsIds " + JSON.stringify(authorsIds));
+    book.authors = [];
+    for (const item of authorsIds) {
+        let name: any = await (await connection).execute(`SELECT author FROM authors WHERE id = ${item.author_id}`)
+            .then(result => {
+                const nameArr: any = result[0];
+                const name: any = nameArr[0].author;
+                console.log("single author name query response: " + JSON.stringify(name));
+                return name
+            });
+        console.log("Single name promise: " + JSON.stringify(await name));
+        await book.authors.push(await name);
+    }
+    console.log("authors array: " + JSON.stringify(book.authors));
+    return book.authors;
 }
 
-async function querySingleAuthorName(req: any, res: any, book: any, authorId: any) {
-    (await connection).query(`SELECT author FROM authors WHERE id = ${authorId}`)
-        .then(result => {
-            const name = result[0];
-            console.log("AUTHOR NAME: " + name);
-            book.authors.push(name);
-        })
-        .catch(err => {
-            console.log(`Error during quering single author name wiht author id - ${authorId} and book id - ${book.id}`);
-            throw err;
-        })
-}
 
 async function countBooksAmount(res: any, sql: string, req: any) {
     const foundBooksCountSQLQuery = (typeof res.locals.search === null) ?
         `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`
         :  composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${req.query.offset}`);
-    (await connection).query(foundBooksCountSQLQuery)
+    await (await connection).query(foundBooksCountSQLQuery)
         .then(async (result: any) => {
             const count = await result[0][0].count;
             console.log("COUNT BOOKS AMOUT QUERY: " + JSON.stringify(count));
@@ -84,8 +69,6 @@ async function countBooksAmount(res: any, sql: string, req: any) {
             console.log("Error during counting books list amount: " + err);
             throw err;
         })
-    //         await res.status(200);
-    //         await res.render("v1/books/index", {books: await result, searchQuery: searchQuery, pagesStatus: pagesStatus});
 }
 
 function assemblePagesStatusData(offset: any, count: any) {
@@ -100,25 +83,24 @@ function assemblePagesStatusData(offset: any, count: any) {
 }
 
 async function search(req: any, res: any) {
-    assembleQueryStringsToLocals(req, res);
-    const sql: string = composeSLQQuery(res);
-    (await connection).query(sql)
-        .then(async result => {
-            res.locals.books = result[0];
-            console.log("SEARCH QUERY RESULT[0]: " + JSON.stringify(result[0]));
-            countBooksAmount(res, sql, req);
-            const authorsQueries = [];
-            for (let i = 0; i < res.locals.books.length; i++) {
-                authorsQueries.push(queryAuthorsNames(req, res, res.locals.books[i]));
-            }
-            await Promise.all([authorsQueries]);
-            await res.status(200);
-            await res.send({books: await res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
-        })
-        .catch(async err => {
-            await res.status(500);
-            return res.send({error: "Error in database during searching books: " + err});
-        });
+    try {
+        assembleQueryStringsToLocals(req, res);
+        const sql: string = composeSLQQuery(res);
+        const [ booksData ] = await (await connection).query(sql); 
+        res.locals.books = booksData;
+        await countBooksAmount(res, sql, req);
+        const authorsQueries = [];
+        for (let i = 0; i < res.locals.books.length; i++) {
+            authorsQueries.push(await queryAuthorsNames(req, res, res.locals.books[i]));
+        }
+        await Promise.all([authorsQueries]);
+        await res.status(200);
+        //render
+        await res.send({books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
+    } catch (err) {
+        await res.status(500);
+        return res.send({error: "Error in database during searching books: " + err});
+    }    
 };
 
 function assembleQueryStringsToLocals(req: any, res: any) {

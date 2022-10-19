@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 
 export function getAuthPage(req: any, res: any) {
     res.status(200);
-    res.render("v1/auth/index");
+    res.render("v2/auth/index");
 }
 
 export async function logout(req: any, res: any) {

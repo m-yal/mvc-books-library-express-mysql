@@ -17,7 +17,7 @@ const express_basic_auth_1 = require("express-basic-auth");
 const connection_1 = __importDefault(require("../../models/utils/connection"));
 function getAuthPage(req, res) {
     res.status(200);
-    res.render("v1/auth/index");
+    res.render("v2/auth/index");
 }
 exports.getAuthPage = getAuthPage;
 function logout(req, res) {

@@ -12,15 +12,17 @@ export async function getBook(req: any, res: any) {
         await res.status(500);
         await res.send({error: `Error in database during getting single book with id ${bookId}: ${err}`})
     }
+    res.locals.book.authors = res.locals.authors;
     await res.status(200);
-    await res.send(JSON.stringify(res.locals));
+    console.log("RES LOCAL BOOK BEFORE RENDER " + JSON.stringify(res.locals.book));
+    await res.render("v2/book/index", {book: res.locals.book});
 }
 
 async function queryBookById(req: any, res: any, bookId: string): Promise<any> {
     return (await connection).query(`SELECT * FROM books WHERE id = ${bookId} AND is_deleted = FALSE;`)
         .then((result: any)  => {
             console.log("result of querying book by id: " + JSON.stringify(result[0]));
-            res.locals.book = result[0];
+            res.locals.book = result[0][0];
         }).catch((err: Error) => {
             console.error("Error during querying book data by id: " + err);
             throw err;
@@ -35,8 +37,9 @@ async function queryAuthors(req: any, res: any, bookId: string): Promise<any> {
             const authorsAmount: number = result[0].length;
             console.log(`authorsAmount ${authorsAmount}`);
             const queries: any[] = [];
+            res.locals.authors = [];
             for (let i = 0; i < authorsAmount; i++) {
-                queries.push(queryAuthorsNames(req, res, res.locals.authors_ids[i].author_id));
+                queries.push(await queryAuthorsNames(req, res, res.locals.authors_ids[i].author_id));
             }
             await Promise.all(queries);
         })
@@ -49,8 +52,10 @@ async function queryAuthors(req: any, res: any, bookId: string): Promise<any> {
 async function queryAuthorsNames(req:any, res:any, id: any) {
     return await (await connection).query(`SELECT author FROM authors WHERE id = ${id};`)
         .then(async (result) => {
-            console.log(`Queried author: ${JSON.stringify(result[0])}`);
-            res.locals.authors = result[0];
+            const response: any = result[0];
+            const name: any = response[0].author;
+            console.log(`Queried author: ${JSON.stringify(name)}`);
+            res.locals.authors.push(name);
         })
         .catch((err: Error) => {
             console.log("Error during querying authors: " + err);

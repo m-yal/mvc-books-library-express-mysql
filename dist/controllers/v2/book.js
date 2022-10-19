@@ -28,8 +28,10 @@ function getBook(req, res) {
             yield res.status(500);
             yield res.send({ error: `Error in database during getting single book with id ${bookId}: ${err}` });
         }
+        res.locals.book.authors = res.locals.authors;
         yield res.status(200);
-        yield res.send(JSON.stringify(res.locals));
+        console.log("RES LOCAL BOOK BEFORE RENDER " + JSON.stringify(res.locals.book));
+        yield res.render("v2/book/index", { book: res.locals.book });
     });
 }
 exports.getBook = getBook;
@@ -38,7 +40,7 @@ function queryBookById(req, res, bookId) {
         return (yield connection_1.default).query(`SELECT * FROM books WHERE id = ${bookId} AND is_deleted = FALSE;`)
             .then((result) => {
             console.log("result of querying book by id: " + JSON.stringify(result[0]));
-            res.locals.book = result[0];
+            res.locals.book = result[0][0];
         }).catch((err) => {
             console.error("Error during querying book data by id: " + err);
             throw err;
@@ -54,8 +56,9 @@ function queryAuthors(req, res, bookId) {
             const authorsAmount = result[0].length;
             console.log(`authorsAmount ${authorsAmount}`);
             const queries = [];
+            res.locals.authors = [];
             for (let i = 0; i < authorsAmount; i++) {
-                queries.push(queryAuthorsNames(req, res, res.locals.authors_ids[i].author_id));
+                queries.push(yield queryAuthorsNames(req, res, res.locals.authors_ids[i].author_id));
             }
             yield Promise.all(queries);
         }))
@@ -69,8 +72,10 @@ function queryAuthorsNames(req, res, id) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield (yield connection_1.default).query(`SELECT author FROM authors WHERE id = ${id};`)
             .then((result) => __awaiter(this, void 0, void 0, function* () {
-            console.log(`Queried author: ${JSON.stringify(result[0])}`);
-            res.locals.authors = result[0];
+            const response = result[0];
+            const name = response[0].author;
+            console.log(`Queried author: ${JSON.stringify(name)}`);
+            res.locals.authors.push(name);
         }))
             .catch((err) => {
             console.log("Error during querying authors: " + err);
