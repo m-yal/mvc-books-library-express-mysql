@@ -8,11 +8,11 @@ export async function getBooks(req: any, res: any) {
         search(req, res);
     } else {
         res.locals.search = null;
-        getAll(req, res);
+        getAll(req, res, false);
     }
 };
 
-async function getAll(req: any, res: any) {
+export async function getAll(req: any, res: any, isAdmin: boolean) {
     res.locals.offset = req.query.offset || 0;
     const sql = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${res.locals.offset};`;
     (await connection).query(sql)
@@ -26,7 +26,11 @@ async function getAll(req: any, res: any) {
             }
             await Promise.all([authorsQueries]);
             await res.status(200);
-            await res.send({books: await res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
+            if (isAdmin) { //or ternary
+                // return res.render...
+            }  
+            //render...
+            return await res.send({books: await res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
         })
         .catch(async err => {
             await res.status(500);

@@ -7,37 +7,35 @@ export function getAuthPage(req: any, res: any) {
     res.render("v1/auth/index");
 }
 
-export function logout(req: any, res: any) {
-    //destroy session: from db + from cookie
+export async function logout(req: any, res: any) {
     const sql = `DELETE FROM sessions_v1 WHERE id='${req.sessionID}'`;
-    // connection.query(sql, (err, result) => {
-    //     try {
-    //         if (err) throw err;
-    //         res.clearCookie("sid");
-    //         res.redirect("http://localhost:3005/api/v1/");
-    //     } catch (err) {
-    //         res.status(500);
-    //         res.redirect("http://localhost:3005/api/v1/admin");
-    //     }
-    // });
+    (await connection).query(sql)
+        .then(result => {
+            res.clearCookie("sid");
+            res.redirect(`http://localhost:${process.env.PORT}/`);
+        })
+        .catch(err => {
+            console.log("Error during logout: " + err);
+            res.status(500);
+            res.redirect(`http://localhost:${process.env.PORT}/admin`);
+        })
 }
 
-export function login(req: Request, res: Response) {
+export async function login(req: Request, res: Response) {
     const {login, password} = req.body;
     if (check(login, password)) {
         const sql = `INSERT INTO sessions_v1(id) VALUES ('${req.session.id}');`;
-        // connection.query(sql, (err, result) => {
-        //     try {
-        //         if (err) throw err;
-        //         res.redirect("http://localhost:3005/api/v1/admin");
-        //     } catch (err) {
-        //         res.status(500);
-        //         res.redirect("http://localhost:3005/api/v1/auth");           
-        //     }
-        // });
+        (await connection).query(sql)
+            .then(async result => {
+                res.redirect(`http://localhost:${process.env.PORT}/admin`);
+            })
+            .catch(err => {
+                res.status(500);
+                res.redirect(`http://localhost:${process.env.PORT}/auth`); 
+            })
     } else {
         res.status(401);
-        res.redirect("http://localhost:3005/api/v1/auth");
+        res.redirect(`http://localhost:${process.env.PORT}/auth`);
     }
 }
 

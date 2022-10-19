@@ -7,7 +7,18 @@ const connection = mysql.createConnection({
     password: "",
     database: "library",
     multipleStatements: true
-});
+})
+
+async function testQuery() {
+    console.log("TestQuery 1:");
+    const [response1] = await (await connection).query(`SELECT id FROM books; SELECT book_name FROM books;`);
+    console.log("Response1: " + JSON.stringify(response1));
+    
+    // console.log("TestQuery 2:");
+    // const [response2] = await (await connection).execute('');
+    // console.log("response2 " + JSON.stringify(response2));
+}
+testQuery();
 
 // connection.connect((err: Error) => {
 //     if (err) {
