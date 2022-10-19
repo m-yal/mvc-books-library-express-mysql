@@ -10,7 +10,7 @@ export async function getBook(req: any, res: any) {
         ]);    
     } catch (err) {
         await res.status(500);
-        await res.send({error: `Error in database during getting single book with id ${bookId}: ${err}`})
+        await res.json({error: `Error in database during getting single book with id ${bookId}: ${err}`})
     }
     res.locals.book.authors = res.locals.authors;
     await res.status(200);

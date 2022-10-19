@@ -16,8 +16,10 @@ exports.login = exports.logout = exports.getAuthPage = void 0;
 const express_basic_auth_1 = require("express-basic-auth");
 const connection_1 = __importDefault(require("../../models/utils/connection"));
 function getAuthPage(req, res) {
-    res.status(200);
-    res.render("v2/auth/index");
+    return __awaiter(this, void 0, void 0, function* () {
+        yield res.status(200);
+        yield res.render("v2/auth/index");
+    });
 }
 exports.getAuthPage = getAuthPage;
 function logout(req, res) {
@@ -39,10 +41,13 @@ exports.logout = logout;
 function login(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { login, password } = req.body;
+        console.log("PORT " + process.env.PORT);
         if (check(login, password)) {
+            console.log("Login and pass are correct");
             const sql = `INSERT INTO sessions_v1(id) VALUES ('${req.session.id}');`;
-            (yield connection_1.default).query(sql)
+            yield (yield connection_1.default).query(sql)
                 .then((result) => __awaiter(this, void 0, void 0, function* () {
+                res.status(301);
                 res.redirect(`http://localhost:${process.env.PORT}/admin`);
             }))
                 .catch(err => {

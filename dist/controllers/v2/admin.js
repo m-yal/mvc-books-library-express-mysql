@@ -21,7 +21,7 @@ function deleteBook(req, res) {
         const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
         (yield connection_1.default).query(sql)
             .then((result) => __awaiter(this, void 0, void 0, function* () {
-            const isSessionPresent = yield result[0].dbResponse;
+            const isSessionPresent = yield result[0][0].dbResponse;
             console.log("IS SESSION EXISTS DURING DELETING BOOK: " + isSessionPresent);
             if (!isSessionPresent) {
                 yield res.status(401);
@@ -57,8 +57,7 @@ function getBooks(req, res) {
         const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
         (yield connection_1.default).query(sql)
             .then((result) => __awaiter(this, void 0, void 0, function* () {
-            const isSessionPresent = Boolean(result[0].dbResponse);
-            console.log("IS SESSION PRESENT DURING GETTING BOOKS: " + isSessionPresent);
+            const isSessionPresent = Boolean(yield result[0][0].dbResponse);
             if (isSessionPresent) {
                 yield (0, books_1.getAll)(req, res, true);
             }
@@ -98,18 +97,17 @@ function addBook(req, res) {
         const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
         (yield connection_1.default).query(sql)
             .then((result) => __awaiter(this, void 0, void 0, function* () {
-            const isSessionPresent = yield result[0].dbResponse;
-            console.log("IS SESSION EXISTS DURING ADDING BOOK: " + isSessionPresent);
+            const isSessionPresent = yield result[0][0].dbResponse;
             if (!isSessionPresent) {
                 yield res.status(401);
                 return yield res.redirect(`http://localhost:3005/auth`);
             }
             ;
-            yield Promise.all([
-                addBookDataQuery(req, res),
-                addAuthors(req, res)
-            ]);
-            const queries = [];
+            console.log("BEFORE PROMISE ALL");
+            let queries = [addBookDataQuery(req, res), addAuthors(req, res)];
+            yield Promise.all(queries);
+            console.log("AFTER PROMISE ALL");
+            queries = [];
             const authorsAmount = res.locals.authorsIds.length;
             for (let i = 0; i < authorsAmount; i++) {
                 queries.push((yield connection_1.default)
@@ -132,12 +130,13 @@ function addBookDataQuery(req, res) {
         const { bookName, publishYear, description } = req.body;
         const imagePath = ((_a = req.file) === null || _a === void 0 ? void 0 : _a.filename) || null;
         const sql = `INSERT INTO books(book_name, publish_year, image_path, book_description) VALUES ('${bookName}', ${publishYear || 0}, '${imagePath}', '${description}');
-        SELECT id FROM books WHERE book_name === ${bookName};`;
-        (yield connection_1.default).query(sql)
+        SELECT id FROM books WHERE book_name = '${bookName}';`;
+        return yield (yield connection_1.default).query(sql)
             .then(result => {
-            console.log("RESULT FROM ADD BOOK QUERY: " + JSON.stringify(result));
-            console.log("ADDED BOOK ID " + result[1]);
-            res.locals.bookId = result[1];
+            const response = result[0];
+            const bookId = response[1][0].id;
+            res.locals.bookId = bookId;
+            console.log("NEW BOOK ID: " + res.locals.bookId);
         })
             .catch(err => {
             console.log("Error during add book query");
@@ -147,20 +146,18 @@ function addBookDataQuery(req, res) {
 }
 function addAuthors(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [author_1, author_2, author_3] = req.body;
+        console.log("INSIDE ADD AUTHORS, req.body: " + JSON.stringify(req.body));
         res.locals.authorsIds = [];
-        if (author_1) {
-            (yield connection_1.default).query(`INSERT INTO authors(author) VALUES(${author_1});`);
-            res.locals.authorsIds.push((yield connection_1.default).query(`SELECT id FROM authors WHERE author = ${author_1};`));
+        const authors = [req.body.author_1, req.body.author_2, req.body.author_3];
+        console.log("Authors before adding to db: " + JSON.stringify(authors));
+        for (const author of authors) {
+            yield (yield connection_1.default).query(`INSERT INTO authors(author) VALUES('${author}');`);
+            const authorIdResponse = yield (yield connection_1.default).query(`SELECT id FROM authors WHERE author = '${author}';`);
+            const authorId = authorIdResponse[0][0].id;
+            console.log("authorId " + JSON.stringify(authorId));
+            yield res.locals.authorsIds.push(authorId);
         }
-        if (author_2) {
-            (yield connection_1.default).query(`INSERT INTO authors(author) VALUES(${author_2});`);
-            res.locals.authorsIds.push((yield connection_1.default).query(`SELECT id FROM authors WHERE author = ${author_2};`));
-        }
-        if (author_2) {
-            (yield connection_1.default).query(`INSERT INTO authors(author) VALUES(${author_2});`);
-            res.locals.authorsIds.push((yield connection_1.default).query(`SELECT id FROM authors WHERE author = ${author_2};`));
-        }
+        console.log("Authors Ids after adding to db: " + JSON.stringify(res.locals.authorsIds));
     });
 }
 // function assembleAddBookSqlQuery(req: any) {

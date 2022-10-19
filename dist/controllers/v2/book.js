@@ -26,7 +26,7 @@ function getBook(req, res) {
         }
         catch (err) {
             yield res.status(500);
-            yield res.send({ error: `Error in database during getting single book with id ${bookId}: ${err}` });
+            yield res.json({ error: `Error in database during getting single book with id ${bookId}: ${err}` });
         }
         res.locals.book.authors = res.locals.authors;
         yield res.status(200);

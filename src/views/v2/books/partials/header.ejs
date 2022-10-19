@@ -1,7 +1,7 @@
 <nav class="navbar navbar-default">
     <div class="container">
         <div class="col-xs-5 col-sm-2 col-md-2 col-lg-2">
-            <div class="logo"><a href="http://localhost:3005/api/v1/" class="navbar-brand"><span class="sh">Ш</span><span class="plus">++</span></a></div>
+            <div class="logo"><a href="http://localhost:3005/" class="navbar-brand"><span class="sh">Ш</span><span class="plus">++</span></a></div>
         </div>
         <div class="col-xs-12 col-sm-7 col-md-8 col-lg-8">
             <div class="main-menu">
@@ -14,7 +14,7 @@
                                     if (e.keyCode == 13) {
                                         e.preventDefault();
                                         const searchQuery = $("#search").val();
-                                        const url = `http://localhost:3005/api/v1/?search=${searchQuery}`;
+                                        const url = `http://localhost:3005/?search=${searchQuery}`;
                                         alert(url)
                                         window.location.href = url;
                                     }
@@ -30,7 +30,7 @@
         </div>
         <div class="col-xs-2 col-sm-3 col-md-2 col-lg-2 hidden-xs">
             <div>
-                <a id="login-button" ms-hide-element="true" href="http://localhost:3005/api/v1/auth" class="button login w-button">Login</a>
+                <a id="login-button" ms-hide-element="true" href="http://localhost:3005/auth" class="button login w-button">Login</a>
             </div>
             <div class="social">
                 <a href="https://www.facebook.com/shpp.kr/" target="_blank">

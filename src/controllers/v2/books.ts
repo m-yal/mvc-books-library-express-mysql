@@ -24,33 +24,25 @@ export async function getAll(req: any, res: any, isAdmin: boolean) {
     }
     await Promise.all([authorsQueries]);
     await res.status(200);
-    if (isAdmin) { //or ternary
-        //         await res.status(200);
-        //         await res.render("v1/books/index", {books: await result, searchQuery: searchQuery, pagesStatus: pagesStatus});
-        return await res.send({books: await res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
-    }  
-    //         await res.status(200);
-    //         await res.render("v1/books/index", {books: await result, searchQuery: searchQuery, pagesStatus: pagesStatus});
-    return await res.send({books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
+    if (isAdmin) {
+        await res.render("v2/admin/index", {books: res.locals.books, pagesAmount: res.locals.pagesStatus.totalyFound / LIMIT, currentPage: (res.locals.offset / LIMIT) + 1});
+    } else {
+        await res.render(`v2/books/index`, {books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
+    }
 };
 
 async function queryAuthorsNames(req: any, res: any, book: any) {
-    console.log("QUERY AUTHOR BOOK ID: " + book.id);
     const [ authorsIds ]: any = await (await connection).execute(`SELECT author_id FROM books_authors WHERE book_id = ${book.id};`);
-    console.log("authorsIds " + JSON.stringify(authorsIds));
     book.authors = [];
     for (const item of authorsIds) {
         let name: any = await (await connection).execute(`SELECT author FROM authors WHERE id = ${item.author_id}`)
             .then(result => {
                 const nameArr: any = result[0];
                 const name: any = nameArr[0].author;
-                console.log("single author name query response: " + JSON.stringify(name));
                 return name
             });
-        console.log("Single name promise: " + JSON.stringify(await name));
         await book.authors.push(await name);
     }
-    console.log("authors array: " + JSON.stringify(book.authors));
     return book.authors;
 }
 
@@ -62,11 +54,9 @@ async function countBooksAmount(res: any, sql: string, req: any) {
     await (await connection).query(foundBooksCountSQLQuery)
         .then(async (result: any) => {
             const count = await result[0][0].count;
-            console.log("COUNT BOOKS AMOUT QUERY: " + JSON.stringify(count));
             res.locals.pagesStatus = await assemblePagesStatusData(res.locals.offset, count);
         })
         .catch(async err => {
-            console.log("Error during counting books list amount: " + err);
             throw err;
         })
 }
@@ -95,11 +85,10 @@ async function search(req: any, res: any) {
         }
         await Promise.all([authorsQueries]);
         await res.status(200);
-        //render
-        await res.send({books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
+        await res.render("v2/books/index", {books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus});
     } catch (err) {
         await res.status(500);
-        return res.send({error: "Error in database during searching books: " + err});
+        return res.json({error: "Error in database during searching books: " + err});
     }    
 };
 

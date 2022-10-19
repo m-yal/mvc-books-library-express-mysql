@@ -7,7 +7,7 @@ export async function deleteBook(req: any, res: any) {
     const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
     (await connection).query(sql)
         .then(async (result: any) => {
-            const isSessionPresent = await result[0].dbResponse;
+            const isSessionPresent = await result[0][0].dbResponse;
             console.log("IS SESSION EXISTS DURING DELETING BOOK: " + isSessionPresent);
             if (!isSessionPresent) {
                 await res.status(401);
@@ -39,8 +39,7 @@ export async function getBooks(req: any, res: any) {
     const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
     (await connection).query(sql)
         .then(async (result: any) => {
-            const isSessionPresent = Boolean(result[0].dbResponse);
-            console.log("IS SESSION PRESENT DURING GETTING BOOKS: " + isSessionPresent);
+            const isSessionPresent = Boolean(await result[0][0].dbResponse);
             if (isSessionPresent) {
                 await getAll(req, res, true);
             } else {
@@ -79,19 +78,18 @@ export async function addBook(req: any, res: any) {
     const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
     (await connection).query(sql)
         .then(async (result: any) => {
-            const isSessionPresent = await result[0].dbResponse;
-            console.log("IS SESSION EXISTS DURING ADDING BOOK: " + isSessionPresent);
+            const isSessionPresent = await result[0][0].dbResponse;
             if (!isSessionPresent) {
                 await res.status(401);
                 return await res.redirect(`http://localhost:3005/auth`)
             };
 
-            await Promise.all([
-                addBookDataQuery(req, res),
-                addAuthors(req, res)
-            ]);
+            console.log("BEFORE PROMISE ALL");
+            let queries: any = [ addBookDataQuery(req, res),  addAuthors(req, res) ]
+            await Promise.all(queries);
+            console.log("AFTER PROMISE ALL");
 
-            const queries = [];
+            queries = [];
             const authorsAmount = res.locals.authorsIds.length;
             for (let i = 0; i < authorsAmount; i++) {
                 queries.push((await connection)
@@ -112,12 +110,13 @@ async function addBookDataQuery(req: any, res: any) {
     const {bookName, publishYear, description} = req.body;
     const imagePath = req.file?.filename || null;
     const sql = `INSERT INTO books(book_name, publish_year, image_path, book_description) VALUES ('${bookName}', ${publishYear || 0}, '${imagePath}', '${description}');
-        SELECT id FROM books WHERE book_name === ${bookName};`;
-    (await connection).query(sql)
+        SELECT id FROM books WHERE book_name = '${bookName}';`;
+    return await (await connection).query(sql)
         .then(result => {
-            console.log("RESULT FROM ADD BOOK QUERY: " + JSON.stringify(result));
-            console.log("ADDED BOOK ID " + result[1]);
-            res.locals.bookId = result[1];            
+            const response: any = result[0];
+            const bookId: any = response[1][0].id;
+            res.locals.bookId = bookId;
+            console.log("NEW BOOK ID: " + res.locals.bookId);
         })
         .catch(err => {
             console.log("Error during add book query");
@@ -126,20 +125,18 @@ async function addBookDataQuery(req: any, res: any) {
 }
 
 async function addAuthors(req: any, res: any) {
-    const [ author_1, author_2, author_3 ] = req.body;
+    console.log("INSIDE ADD AUTHORS, req.body: " + JSON.stringify(req.body));
     res.locals.authorsIds = [];
-    if (author_1) {
-        (await connection).query(`INSERT INTO authors(author) VALUES(${author_1});`);
-        res.locals.authorsIds.push((await connection).query(`SELECT id FROM authors WHERE author = ${author_1};`));
+    const authors = [ req.body.author_1, req.body.author_2, req.body.author_3 ];
+    console.log("Authors before adding to db: " + JSON.stringify(authors));
+    for (const author of authors) {
+        await (await connection).query(`INSERT INTO authors(author) VALUES('${author}');`);
+        const authorIdResponse: any = await (await connection).query(`SELECT id FROM authors WHERE author = '${author}';`);
+        const authorId: any = authorIdResponse[0][0].id;
+        console.log("authorId " + JSON.stringify(authorId));
+        await res.locals.authorsIds.push(authorId); 
     }
-    if (author_2) {
-        (await connection).query(`INSERT INTO authors(author) VALUES(${author_2});`);
-        res.locals.authorsIds.push((await connection).query(`SELECT id FROM authors WHERE author = ${author_2};`));
-    }
-    if (author_2) {
-        (await connection).query(`INSERT INTO authors(author) VALUES(${author_2});`);
-        res.locals.authorsIds.push((await connection).query(`SELECT id FROM authors WHERE author = ${author_2};`));
-    }
+    console.log("Authors Ids after adding to db: " + JSON.stringify(res.locals.authorsIds));
 }
 
 // function assembleAddBookSqlQuery(req: any) {

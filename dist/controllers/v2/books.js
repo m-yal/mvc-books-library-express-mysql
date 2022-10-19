@@ -42,36 +42,29 @@ function getAll(req, res, isAdmin) {
         }
         yield Promise.all([authorsQueries]);
         yield res.status(200);
-        if (isAdmin) { //or ternary
-            //         await res.status(200);
-            //         await res.render("v1/books/index", {books: await result, searchQuery: searchQuery, pagesStatus: pagesStatus});
-            return yield res.send({ books: yield res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
+        if (isAdmin) {
+            yield res.render("v2/admin/index", { books: res.locals.books, pagesAmount: res.locals.pagesStatus.totalyFound / LIMIT, currentPage: (res.locals.offset / LIMIT) + 1 });
         }
-        //         await res.status(200);
-        //         await res.render("v1/books/index", {books: await result, searchQuery: searchQuery, pagesStatus: pagesStatus});
-        return yield res.send({ books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
+        else {
+            yield res.render(`v2/books/index`, { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
+        }
     });
 }
 exports.getAll = getAll;
 ;
 function queryAuthorsNames(req, res, book) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("QUERY AUTHOR BOOK ID: " + book.id);
         const [authorsIds] = yield (yield connection_1.default).execute(`SELECT author_id FROM books_authors WHERE book_id = ${book.id};`);
-        console.log("authorsIds " + JSON.stringify(authorsIds));
         book.authors = [];
         for (const item of authorsIds) {
             let name = yield (yield connection_1.default).execute(`SELECT author FROM authors WHERE id = ${item.author_id}`)
                 .then(result => {
                 const nameArr = result[0];
                 const name = nameArr[0].author;
-                console.log("single author name query response: " + JSON.stringify(name));
                 return name;
             });
-            console.log("Single name promise: " + JSON.stringify(yield name));
             yield book.authors.push(yield name);
         }
-        console.log("authors array: " + JSON.stringify(book.authors));
         return book.authors;
     });
 }
@@ -83,11 +76,9 @@ function countBooksAmount(res, sql, req) {
         yield (yield connection_1.default).query(foundBooksCountSQLQuery)
             .then((result) => __awaiter(this, void 0, void 0, function* () {
             const count = yield result[0][0].count;
-            console.log("COUNT BOOKS AMOUT QUERY: " + JSON.stringify(count));
             res.locals.pagesStatus = yield assemblePagesStatusData(res.locals.offset, count);
         }))
             .catch((err) => __awaiter(this, void 0, void 0, function* () {
-            console.log("Error during counting books list amount: " + err);
             throw err;
         }));
     });
@@ -116,12 +107,11 @@ function search(req, res) {
             }
             yield Promise.all([authorsQueries]);
             yield res.status(200);
-            //render
-            yield res.send({ books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
+            yield res.render("v2/books/index", { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
         }
         catch (err) {
             yield res.status(500);
-            return res.send({ error: "Error in database during searching books: " + err });
+            return res.json({ error: "Error in database during searching books: " + err });
         }
     });
 }

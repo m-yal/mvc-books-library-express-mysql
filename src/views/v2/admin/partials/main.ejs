@@ -3,7 +3,7 @@
             <thead>
               <tr>
                 <th scope="col">Название книги</th>
-                <th scope="col">Автор</th> <!-- for v1 only 1 author-->
+                <th scope="col">Автора</th>
                 <th scope="col">Год</th>
                 <th scope="col">Действия</th>
                 <th scope="col">Визитов</th>
@@ -17,7 +17,7 @@
                             <img src="/images/<%= books[i].image_path %>" alt="<%= books[i].book_name %>" style="width: auto; height: 64px;">
                             <%= books[i].book_name %>
                         </th>
-                        <td><%= books[i].author %></td>
+                        <td><%= books[i].authors %></td>
                         <td><%= books[i].publish_year %></td>
                         <td>
                             <button id="<%= books[i].id %>" onclick="deleteBook(String(this.id))">Удалить</button>
@@ -35,7 +35,7 @@
                     <% if (i === currentPage - 1) { %>
                         <li class="page-item"><a class="page-link" style="color:red"><%= pageToPrint %></a></li>
                     <% } else { %>
-                        <li class="page-item"><a class="page-link" href="http://localhost:3005/api/v1/admin/?offset=<%= i * 20 %>"><%= pageToPrint %></a></li>
+                        <li class="page-item"><a class="page-link" href="http://localhost:3005/admin/?offset=<%= i * 20 %>"><%= pageToPrint %></a></li>
                     <% } %>
                 <% } %>
             </ul>
@@ -43,7 +43,7 @@
     </div>
         
     <div>
-        <form id="add-book" method="post" enctype='multipart/form-data' action='http://localhost:3005/api/v1/admin/add/'>
+        <form id="add-book" method="post" enctype='multipart/form-data' action='http://localhost:3005/admin/add/'>
             <div class="mb-3">
               <label for="bookName" class="form-label">Название книги</label>
               <input type="bookName" id="name" class="form-control" name="bookName">

@@ -2,9 +2,9 @@ import { safeCompare } from "express-basic-auth";
 import connection from "../../models/utils/connection";
 import { Request, Response } from "express";
 
-export function getAuthPage(req: any, res: any) {
-    res.status(200);
-    res.render("v2/auth/index");
+export async function getAuthPage(req: any, res: any) {
+    await res.status(200);
+    await res.render("v2/auth/index");
 }
 
 export async function logout(req: any, res: any) {
@@ -23,10 +23,13 @@ export async function logout(req: any, res: any) {
 
 export async function login(req: Request, res: Response) {
     const {login, password} = req.body;
+    console.log("PORT " + process.env.PORT);
     if (check(login, password)) {
+        console.log("Login and pass are correct");
         const sql = `INSERT INTO sessions_v1(id) VALUES ('${req.session.id}');`;
-        (await connection).query(sql)
+        await (await connection).query(sql)
             .then(async result => {
+                res.status(301);
                 res.redirect(`http://localhost:${process.env.PORT}/admin`);
             })
             .catch(err => {
