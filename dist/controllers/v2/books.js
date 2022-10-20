@@ -17,6 +17,8 @@ const connection_1 = __importDefault(require("../../models/utils/connection"));
 const LIMIT = 20;
 const queryAllBooksSQL = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ? OFFSET ?;`;
 const countAllBooksSQL = `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`;
+const adminViewPath = "v2/admin/index";
+const booksViewPath = `v2/books/index`;
 function getBooks(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (typeof req.query.search === "string") {
@@ -90,9 +92,9 @@ function renderResult(res, isAdmin) {
         try {
             yield res.status(200);
             if (isAdmin) {
-                return yield res.render("v2/admin/index", { books: res.locals.books, pagesAmount: res.locals.pagesStatus.totalyFound / LIMIT, currentPage: (res.locals.offset / LIMIT) + 1 });
+                return yield res.render(adminViewPath, { books: res.locals.books, pagesAmount: res.locals.pagesStatus.totalyFound / LIMIT, currentPage: (res.locals.offset / LIMIT) + 1 });
             }
-            return yield res.render(`v2/books/index`, { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
+            return yield res.render(booksViewPath, { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
         }
         catch (err) {
             throw Error("Error assembling response for rendering or rendering -> " + err);
@@ -174,5 +176,5 @@ function composeSearchCountSQL(res) {
 }
 function finish(res) {
     res.status(200);
-    res.render("v2/books/index", { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
+    res.render(booksViewPath, { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
 }
