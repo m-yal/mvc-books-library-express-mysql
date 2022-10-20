@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.upload = exports.app = void 0;
+exports.PORT = exports.upload = exports.app = void 0;
 const express_1 = __importDefault(require("express"));
 const books_1 = __importDefault(require("./routes/v1/books"));
 const book_1 = require("./routes/v1/book");
@@ -56,6 +56,6 @@ exports.app.use("", admin_2.default);
 exports.app.use(function (req, res, next) {
     res.status(404).send({ error: "Not Found Page" });
 });
-const PORT = process.env.PORT || "3005";
-exports.app.listen(PORT);
-console.log("Server started on port " + PORT);
+exports.PORT = process.env.PORT || "3005";
+exports.app.listen(exports.PORT);
+console.log("Server started on port " + exports.PORT);

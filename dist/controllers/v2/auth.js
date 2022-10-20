@@ -15,53 +15,64 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.login = exports.logout = exports.getAuthPage = void 0;
 const express_basic_auth_1 = require("express-basic-auth");
 const connection_1 = __importDefault(require("../../models/utils/connection"));
+const dotenv_1 = __importDefault(require("dotenv"));
+dotenv_1.default.config();
+const authViewPath = "v2/auth/index";
+const booksListHref = `http://localhost:${process.env.PORT}/`;
+const adminHref = `http://localhost:${process.env.PORT}/admin`;
+const authHref = `http://localhost:${process.env.PORT}/auth`;
+const deleteSessionSQL = `DELETE FROM sessions_v1 WHERE id = ?;`;
+const insertSessionSQL = `INSERT INTO sessions_v1(id) VALUES (?);`;
 function getAuthPage(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         yield res.status(200);
-        yield res.render("v2/auth/index");
+        yield res.render(authViewPath);
     });
 }
 exports.getAuthPage = getAuthPage;
 function logout(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const sql = `DELETE FROM sessions_v1 WHERE id='${req.sessionID}'`;
-        (yield connection_1.default).query(sql)
-            .then(result => {
-            res.clearCookie("sid");
-            res.redirect(`http://localhost:${process.env.PORT}/`);
-        })
-            .catch(err => {
-            console.log("Error during logout: " + err);
+        try {
+            yield (yield connection_1.default).query(deleteSessionSQL, [req.sessionID]);
+            yield res.clearCookie("sid");
+            yield res.redirect(booksListHref);
+        }
+        catch (err) {
             res.status(500);
-            res.redirect(`http://localhost:${process.env.PORT}/admin`);
-        });
+            res.redirect(adminHref);
+        }
     });
 }
 exports.logout = logout;
 function login(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { login, password } = req.body;
-        console.log("PORT " + process.env.PORT);
         if (check(login, password)) {
-            console.log("Login and pass are correct");
-            const sql = `INSERT INTO sessions_v1(id) VALUES ('${req.session.id}');`;
-            yield (yield connection_1.default).query(sql)
-                .then((result) => __awaiter(this, void 0, void 0, function* () {
-                res.status(301);
-                res.redirect(`http://localhost:${process.env.PORT}/admin`);
-            }))
-                .catch(err => {
-                res.status(500);
-                res.redirect(`http://localhost:${process.env.PORT}/auth`);
-            });
+            saveSessionIdAndRedirect(req, res);
         }
         else {
-            res.status(401);
-            res.redirect(`http://localhost:${process.env.PORT}/auth`);
+            redirectToAuth(res);
         }
     });
 }
 exports.login = login;
+function saveSessionIdAndRedirect(req, res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield (yield connection_1.default).query(insertSessionSQL, [req.sessionID]);
+            res.status(301);
+            return res.redirect(adminHref);
+        }
+        catch (err) {
+            res.status(500);
+            res.redirect(authHref);
+        }
+    });
+}
+function redirectToAuth(res) {
+    res.status(401);
+    res.redirect(authHref);
+}
 function check(login, pass) {
     let valid = true;
     valid = (0, express_basic_auth_1.safeCompare)(login, process.env.LOGIN + "") && valid;

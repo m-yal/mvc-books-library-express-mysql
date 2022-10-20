@@ -14,96 +14,100 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.wantBook = exports.getBook = void 0;
 const connection_1 = __importDefault(require("../../models/utils/connection"));
+const singleBookViewPath = "v2/book/index";
+const getBookIdSQL = `SELECT * FROM books WHERE id = ? AND is_deleted = FALSE;`;
+const getAuthorsIdsSQL = `SELECT author_id FROM books_authors WHERE book_id = ?;`;
+const getAuthorNameSQL = `SELECT author FROM authors WHERE id = ?;`;
 function getBook(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const bookId = req.params.bookId;
         try {
-            yield Promise.all([
-                queryBookById(req, res, bookId),
-                queryAuthors(req, res, bookId),
-                incrCounter("visits", req, res, bookId)
-            ]);
+            yield queryBookData(req, res);
+            yield res.status(200);
+            yield res.render(singleBookViewPath, { book: res.locals.book });
         }
         catch (err) {
             yield res.status(500);
-            yield res.json({ error: `Error in database during getting single book with id ${bookId}: ${err}` });
+            yield res.json({ error: "Error during getting single book -> " + err });
         }
-        res.locals.book.authors = res.locals.authors;
-        yield res.status(200);
-        console.log("RES LOCAL BOOK BEFORE RENDER " + JSON.stringify(res.locals.book));
-        yield res.render("v2/book/index", { book: res.locals.book });
     });
 }
 exports.getBook = getBook;
-function queryBookById(req, res, bookId) {
+function queryBookData(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        return (yield connection_1.default).query(`SELECT * FROM books WHERE id = ${bookId} AND is_deleted = FALSE;`)
-            .then((result) => {
-            console.log("result of querying book by id: " + JSON.stringify(result[0]));
-            res.locals.book = result[0][0];
-        }).catch((err) => {
-            console.error("Error during querying book data by id: " + err);
-            throw err;
-        });
+        try {
+            const bookId = req.params.bookId;
+            yield Promise.all([
+                queryBookById(res, bookId),
+                queryAuthors(req, res, bookId),
+                incrCounter("visits", bookId)
+            ]);
+            res.locals.book.authors = yield res.locals.authors;
+        }
+        catch (err) {
+            throw Error("Error in databese during getting single book -> " + err);
+        }
+    });
+}
+function queryBookById(res, bookId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const bookIdResponse = yield (yield connection_1.default).query(getBookIdSQL, [bookId]);
+            res.locals.book = bookIdResponse[0][0];
+        }
+        catch (err) {
+            throw Error("Error during querying book data by id: " + err);
+        }
     });
 }
 function queryAuthors(req, res, bookId) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield (yield connection_1.default).query(`SELECT author_id FROM books_authors WHERE book_id = ${bookId};`)
-            .then((result) => __awaiter(this, void 0, void 0, function* () {
-            console.log("Author id queried from db: " + JSON.stringify(result[0]));
-            res.locals.authors_ids = result[0];
-            const authorsAmount = result[0].length;
-            console.log(`authorsAmount ${authorsAmount}`);
+        try {
+            const authorsIdsResponse = yield (yield connection_1.default).query(getAuthorsIdsSQL, [bookId]);
+            res.locals.authors_ids = authorsIdsResponse[0];
+            const authorsAmount = res.locals.authors_ids.length;
             const queries = [];
             res.locals.authors = [];
             for (let i = 0; i < authorsAmount; i++) {
                 queries.push(yield queryAuthorsNames(req, res, res.locals.authors_ids[i].author_id));
             }
             yield Promise.all(queries);
-        }))
-            .catch(err => {
-            console.log("Error during querying authors id: " + err);
-            throw err;
-        });
+        }
+        catch (err) {
+            throw Error("Error during querying authors id: " + err);
+        }
     });
 }
 function queryAuthorsNames(req, res, id) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield (yield connection_1.default).query(`SELECT author FROM authors WHERE id = ${id};`)
-            .then((result) => __awaiter(this, void 0, void 0, function* () {
-            const response = result[0];
-            const name = response[0].author;
-            console.log(`Queried author: ${JSON.stringify(name)}`);
+        try {
+            const authorsNamesResponse = yield (yield connection_1.default).query(getAuthorNameSQL, [id]);
+            const name = authorsNamesResponse[0][0].author;
             res.locals.authors.push(name);
-        }))
-            .catch((err) => {
-            console.log("Error during querying authors: " + err);
-            throw err;
-        });
+        }
+        catch (err) {
+            throw Error("Error during querying authors: " + err);
+        }
     });
 }
-function incrCounter(type, req, res, bookId) {
+function incrCounter(type, bookId) {
     return __awaiter(this, void 0, void 0, function* () {
-        return (yield connection_1.default).query(`UPDATE books SET ${type} = ${type} + 1 WHERE id = ${bookId}`)
-            .catch(err => {
-            console.log(`Error during increasing ${type} counter of book ${bookId}`);
-            throw err;
-        });
+        try {
+            return yield (yield connection_1.default).query(`UPDATE books SET ${type} = ${type} + 1 WHERE id = ${bookId};`);
+        }
+        catch (err) {
+            throw Error(`Error during increasing ${type} counter of book ${bookId} -> ${err}`);
+        }
     });
 }
 function wantBook(req, res) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const bookId = req.params.bookId;
-        console.log("Wants single book with id: " + bookId);
-        incrCounter("wants", req, res, bookId)
-            .then(result => {
-            res.status(200);
-            res.end();
-        }).catch(err => {
-            res.status(500);
-            res.end({ error: err });
-        });
-    });
+    try {
+        incrCounter("wants", req.params.bookId);
+        res.status(200);
+        res.json({ ok: true });
+    }
+    catch (err) {
+        res.status(500);
+        res.json({ error: err });
+    }
 }
 exports.wantBook = wantBook;
