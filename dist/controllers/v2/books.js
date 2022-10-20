@@ -15,14 +15,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAll = exports.getBooks = void 0;
 const connection_1 = __importDefault(require("../../models/utils/connection"));
 const LIMIT = 20;
+const queryAllBooksSQL = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ? OFFSET ?;`;
+const countAllBooksSQL = `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`;
 function getBooks(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         if (typeof req.query.search === "string") {
-            res.locals.search = req.query.search;
             search(req, res);
         }
         else {
-            res.locals.search = null;
             getAll(req, res, false);
         }
     });
@@ -31,56 +31,89 @@ exports.getBooks = getBooks;
 ;
 function getAll(req, res, isAdmin) {
     return __awaiter(this, void 0, void 0, function* () {
-        res.locals.offset = req.query.offset || 0;
-        const sql = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${res.locals.offset};`;
-        const [booksData] = yield (yield connection_1.default).query(sql);
-        res.locals.books = booksData;
-        yield countBooksAmount(res, sql, req);
-        const authorsQueries = [];
-        for (const item of res.locals.books) {
-            authorsQueries.push(yield queryAuthorsNames(req, res, item));
+        try {
+            yield queryBooks(req, res);
+            yield countBooksAmount(req, res);
+            yield queryAuthors(res);
+            yield renderResult(res, isAdmin);
         }
-        yield Promise.all([authorsQueries]);
-        yield res.status(200);
-        if (isAdmin) {
-            yield res.render("v2/admin/index", { books: res.locals.books, pagesAmount: res.locals.pagesStatus.totalyFound / LIMIT, currentPage: (res.locals.offset / LIMIT) + 1 });
-        }
-        else {
-            yield res.render(`v2/books/index`, { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
+        catch (err) {
+            yield res.status(500);
+            yield res.json("Error occured during getting books list -> " + err);
         }
     });
 }
 exports.getAll = getAll;
 ;
-function queryAuthorsNames(req, res, book) {
+function queryBooks(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [authorsIds] = yield (yield connection_1.default).execute(`SELECT author_id FROM books_authors WHERE book_id = ${book.id};`);
-        book.authors = [];
-        for (const item of authorsIds) {
-            let name = yield (yield connection_1.default).execute(`SELECT author FROM authors WHERE id = ${item.author_id}`)
-                .then(result => {
-                const nameArr = result[0];
-                const name = nameArr[0].author;
-                return name;
-            });
-            yield book.authors.push(yield name);
+        try {
+            res.locals.search = null;
+            res.locals.offset = req.query.offset || 0;
+            const [booksData] = yield (yield connection_1.default).query(queryAllBooksSQL, [LIMIT, +res.locals.offset]);
+            res.locals.books = booksData;
         }
-        return book.authors;
+        catch (err) {
+            throw Error("Error during querying main books data from db -> " + err);
+        }
     });
 }
-function countBooksAmount(res, sql, req) {
+function countBooksAmount(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const foundBooksCountSQLQuery = (typeof res.locals.search === null) ?
-            `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`
-            : composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${req.query.offset}`);
-        yield (yield connection_1.default).query(foundBooksCountSQLQuery)
-            .then((result) => __awaiter(this, void 0, void 0, function* () {
-            const count = yield result[0][0].count;
+        try {
+            const foundBooksCountSQLQuery = (typeof res.locals.search === null) ? countAllBooksSQL : composeSearchCountSQL(res);
+            const [countResp] = yield (yield connection_1.default).query(foundBooksCountSQLQuery);
+            const count = yield countResp[0].count;
             res.locals.pagesStatus = yield assemblePagesStatusData(res.locals.offset, count);
-        }))
-            .catch((err) => __awaiter(this, void 0, void 0, function* () {
-            throw err;
-        }));
+        }
+        catch (err) {
+            throw Error("Error during querying found books count from db -> " + err);
+        }
+    });
+}
+function queryAuthors(res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const authorsQueries = [];
+            for (const item of res.locals.books) {
+                authorsQueries.push(yield queryAuthorsNames(item));
+            }
+            yield Promise.all([authorsQueries]);
+        }
+        catch (err) {
+            throw Error("Error during querying authors list from db -> " + err);
+        }
+    });
+}
+function renderResult(res, isAdmin) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield res.status(200);
+            if (isAdmin) {
+                return yield res.render("v2/admin/index", { books: res.locals.books, pagesAmount: res.locals.pagesStatus.totalyFound / LIMIT, currentPage: (res.locals.offset / LIMIT) + 1 });
+            }
+            return yield res.render(`v2/books/index`, { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
+        }
+        catch (err) {
+            throw Error("Error assembling response for rendering or rendering -> " + err);
+        }
+    });
+}
+function queryAuthorsNames(book) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const [authorsIds] = yield (yield connection_1.default).execute(`SELECT author_id FROM books_authors WHERE book_id = ${book.id};`);
+            book.authors = [];
+            for (const item of authorsIds) {
+                const nameResponse = yield (yield connection_1.default).execute(`SELECT author FROM authors WHERE id = ${item.author_id}`);
+                const name = nameResponse[0][0].author;
+                yield book.authors.push(yield name);
+            }
+            return book.authors;
+        }
+        catch (err) {
+            throw Error("Error during querying authors names from db -> " + err);
+        }
     });
 }
 function assemblePagesStatusData(offset, count) {
@@ -96,18 +129,11 @@ function assemblePagesStatusData(offset, count) {
 function search(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            assembleQueryStringsToLocals(req, res);
-            const sql = composeSLQQuery(res);
-            const [booksData] = yield (yield connection_1.default).query(sql);
-            res.locals.books = booksData;
-            yield countBooksAmount(res, sql, req);
-            const authorsQueries = [];
-            for (let i = 0; i < res.locals.books.length; i++) {
-                authorsQueries.push(yield queryAuthorsNames(req, res, res.locals.books[i]));
-            }
-            yield Promise.all([authorsQueries]);
-            yield res.status(200);
-            yield res.render("v2/books/index", { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
+            replaceQueryStringsToResponseLocals(req, res);
+            yield queryMainBookData(res);
+            yield countBooksAmount(req, res);
+            yield queryAuthors(res);
+            finish(res);
         }
         catch (err) {
             yield res.status(500);
@@ -116,36 +142,37 @@ function search(req, res) {
     });
 }
 ;
-function assembleQueryStringsToLocals(req, res) {
+function replaceQueryStringsToResponseLocals(req, res) {
+    res.locals.search = req.query.search;
     res.locals.year = req.query.year;
     res.locals.author = req.query.author;
     res.locals.search = req.query.search;
     res.locals.offset = req.query.offset || 0;
 }
-function composeSLQQuery(res) {
-    let sql;
-    const authorQuery = res.locals.author ? `autor_id = ${res.locals.author}` : "";
-    const yearQuery = res.locals.year ? `year = ${res.locals.year}` : "";
-    const offsetQuery = `LIMIT ${LIMIT} OFFSET ${res.locals.offset}`;
-    if (!res.locals.author && !res.locals.year) {
-        sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${res.locals.search}%' ORDER BY book_name ASC ${offsetQuery};`;
-    }
-    else {
-        if (res.locals.author && res.locals.year) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${res.locals.search}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
-        }
-        else if (res.locals.author) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${res.locals.search}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`;
-        }
-        else {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${res.locals.search}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
-        }
-    }
-    return sql;
+function queryMainBookData(res) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const [booksData] = yield (yield connection_1.default).query(composeSLQSearchQuery(res));
+        res.locals.books = booksData;
+    });
 }
-function composeFoundBooksCountQuery(sql, offset) {
-    return sql
+function composeSLQSearchQuery(res) {
+    const search = res.locals.search;
+    const main = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${search}%'`;
+    const author = res.locals.author ? ` AND autor_id = ${res.locals.author}` : "";
+    const year = res.locals.year ? ` AND year = ${res.locals.year}` : "";
+    const orderBy = `ORDER BY book_name ASC`;
+    const offset = `LIMIT ${LIMIT} OFFSET ${res.locals.offset};`;
+    return main + " " + [author, year].join("") + " " + orderBy + " " + offset;
+}
+function composeSearchCountSQL(res) {
+    const offset = res.locals.offset;
+    const limitOffset = `LIMIT ${LIMIT} OFFSET ${offset}`;
+    return `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC ${limitOffset};`
         .replace("*", "COUNT(*) AS count")
         .replace("ORDER BY book_name ASC", "")
-        .replace(offset, "");
+        .replace(limitOffset, "");
+}
+function finish(res) {
+    res.status(200);
+    res.render("v2/books/index", { books: res.locals.books, searchQuery: res.locals.search, pagesStatus: res.locals.pagesStatus });
 }
