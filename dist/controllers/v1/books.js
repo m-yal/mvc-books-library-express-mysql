@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getBooks = void 0;
 const connection_1 = __importDefault(require("../../models/utils/connection"));
 const LIMIT = 20;
+const bookPageRenderPath = "v1/books/index";
 function getBooks(req, res) {
     if (typeof req.query.search === "string") {
         search(req, res);
@@ -35,7 +36,7 @@ function getAll(req, res) {
             const count = yield countBooksAmount(books, res, offset, null, getBooksListSQL, req);
             const pagesStatus = assemblePagesStatusData(offset, count);
             yield res.status(200);
-            yield res.render("v1/books/index", { books: books, searchQuery: null, pagesStatus: pagesStatus });
+            yield res.render(bookPageRenderPath, { books: books, searchQuery: null, pagesStatus: pagesStatus });
         }
         catch (err) {
             yield res.status(500);
@@ -69,41 +70,50 @@ function assemblePagesStatusData(offset, count) {
     return pagesStatus;
 }
 function search(req, res) {
-    const { author, year, search } = req.query;
-    const offset = req.query.offset || 0;
-    const sql = composeSLQQuery(author, year, offset, search);
-    // connection.query(sql, async (err, result) => {
-    //     try {
-    //         if (err) throw err;
-    //         countBooksAmount(result, res, offset, search, sql, req);
-    //     } catch (err) {
-    //         res.status(500);
-    //         return res.send({error: "Error in database during searching books: " + err});
-    //     }
-    // });
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const { author, year, search } = req.query;
+            const offset = req.query.offset || 0;
+            const searchSQL = composeSLQQuery(author, year, offset, search);
+            const searchResp = yield (yield connection_1.default).query(searchSQL);
+            const books = searchResp[0];
+            const count = yield countBooksAmount(books, res, offset, search, searchSQL, req);
+            yield res.status(200);
+            yield res.render(bookPageRenderPath, { books: books, searchQuery: search, pagesStatus: assemblePagesStatusData(offset, count) });
+        }
+        catch (err) {
+            res.status(500);
+            return res.json({ error: "Error in database during searching books: " + err });
+        }
+    });
 }
 ;
 function composeSLQQuery(author, year, offset, searchQuery) {
-    let sql;
-    const authorQuery = author ? `autor_id = ${author}` : "";
-    const yearQuery = year ? `year = ${year}` : "";
-    const offsetQuery = `LIMIT ${LIMIT} OFFSET ${offset}`;
-    if (!author && !year) {
-        sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
-    }
-    else {
-        if (author && year) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
-        }
-        else if (author) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`;
-        }
-        else {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;
-        }
-    }
-    return sql;
+    const mainPart = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%'`;
+    const authorPart = author ? ` AND autor_id = ${author}` : "";
+    const yearPart = year ? ` AND year = ${year}` : "";
+    const orderByPart = `ORDER BY book_name ASC`;
+    const offsetPart = `LIMIT ${LIMIT} OFFSET ${offset};`;
+    return mainPart + " " + [authorPart, yearPart].join("") + " " + orderByPart + " " + offsetPart;
 }
+// function composeSLQQuery(author: string, year: string, offset: string, searchQuery: string): string {
+//     let sql: string;
+//     const authorQuery = author ? `autor_id = ${author}` : "";
+//     const yearQuery = year ? `year = ${year}` : "";
+//     const offsetQuery = `LIMIT ${LIMIT} OFFSET ${offset}`;
+//     if (!author && !year) {
+//         sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
+//     } else {
+//         if (author && year) {
+//             sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
+//         } else if (author) {
+//             sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`
+//         } else {
+//             sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
+//         }
+//     }
+//     return sql;
+// }
 function composeFoundBooksCountQuery(sql, offset) {
     return sql
         .replace("*", "COUNT(*) AS count")

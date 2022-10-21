@@ -1,6 +1,8 @@
 import connection from "../../models/utils/connection";
 
 const LIMIT: number = 20;
+const bookPageRenderPath = "v1/books/index";
+const countAllBooksSQL = `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`;
 
 export function getBooks(req: any, res: any) {
     if (typeof req.query.search === "string") {
@@ -19,7 +21,7 @@ async function getAll(req: any, res: any) {
         const count = await countBooksAmount(books, res, offset, null, getBooksListSQL, req);
         const pagesStatus: any = assemblePagesStatusData(offset, count);
         await res.status(200);
-        await res.render("v1/books/index", {books: books, searchQuery: null, pagesStatus: pagesStatus});
+        await res.render(bookPageRenderPath, {books: books, searchQuery: null, pagesStatus: pagesStatus});
     } catch (err) {
         await res.status(500);
         return await res.json({error: `Error in database during getting books list with offset ${offset} -> ${err}`});
@@ -29,8 +31,7 @@ async function getAll(req: any, res: any) {
 async function countBooksAmount(result: any, res: any, offset: any, searchQuery: string | null, sql: string, req: any) {
     try {
         const foundBooksCountSQLQuery = (typeof searchQuery === null) ?
-            `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`
-            : composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${req.query.offset}`);
+            countAllBooksSQL : composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${req.query.offset}`);
         const countResp: any = await (await connection).query(foundBooksCountSQLQuery);
         return countResp[0][0].count;
     } catch (err) {
@@ -49,38 +50,29 @@ function assemblePagesStatusData(offset: any, count: any) {
     return pagesStatus;
 }
 
-function search(req: any, res: any) {
-    const { author, year, search } = req.query;
-    const offset = req.query.offset || 0;
-    const sql: string = composeSLQQuery(author, year, offset, search);
-    // connection.query(sql, async (err, result) => {
-    //     try {
-    //         if (err) throw err;
-    //         countBooksAmount(result, res, offset, search, sql, req);
-    //     } catch (err) {
-    //         res.status(500);
-    //         return res.send({error: "Error in database during searching books: " + err});
-    //     }
-    // });
+async function search(req: any, res: any) {
+    try {
+        const { author, year, search } = req.query;
+        const offset = req.query.offset || 0;
+        const searchSQL: string = composeSLQQuery(author, year, offset, search);  
+        const searchResp: any = await (await connection).query(searchSQL);
+        const books = searchResp[0];
+        const count = await countBooksAmount(books, res, offset, search, searchSQL, req);
+        await res.status(200);
+        await res.render(bookPageRenderPath, {books: books, searchQuery: search, pagesStatus: assemblePagesStatusData(offset, count)});
+    } catch (err) {
+        res.status(500);
+        return res.json({error: "Error in database during searching books: " + err});
+    }
 };
 
 function composeSLQQuery(author: string, year: string, offset: string, searchQuery: string): string {
-    let sql: string;
-    const authorQuery = author ? `autor_id = ${author}` : "";
-    const yearQuery = year ? `year = ${year}` : "";
-    const offsetQuery = `LIMIT ${LIMIT} OFFSET ${offset}`;
-    if (!author && !year) {
-        sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
-    } else {
-        if (author && year) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
-        } else if (author) {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`
-        } else {
-            sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
-        }
-    }
-    return sql;
+    const mainPart = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%'`;
+    const authorPart = author ? ` AND autor_id = ${author}` : "";
+    const yearPart = year ? ` AND year = ${year}` : "";
+    const orderByPart = `ORDER BY book_name ASC`;
+    const offsetPart = `LIMIT ${LIMIT} OFFSET ${offset};`;
+    return mainPart + " " + [authorPart, yearPart].join("") + " " + orderByPart + " " + offsetPart; 
 }
 
 function composeFoundBooksCountQuery(sql: string, offset: string) {
