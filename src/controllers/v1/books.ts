@@ -10,35 +10,32 @@ export function getBooks(req: any, res: any) {
     }
 };
 
-function getAll(req: any, res: any) {
+async function getAll(req: any, res: any) {
     const offset = req.query.offset || 0;
-    const sql = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${offset};`;
-    // connection.query(sql, async (err, result) => {
-    //     try {
-    //         if (err) throw err;
-    //         countBooksAmount(result, res, offset, null, sql, req);
-    //     } catch (err) {
-    //         await res.status(500);
-    //         return await res.send({error: `Error in database during getting books list with offset ${offset} : ${err}`});            
-    //     }
-    // });
+    try {
+        const getBooksListSQL = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ${LIMIT} OFFSET ${offset};`;
+        const booksResp: any = await (await connection).query(getBooksListSQL);
+        const books = booksResp[0];
+        const count = await countBooksAmount(books, res, offset, null, getBooksListSQL, req);
+        const pagesStatus: any = assemblePagesStatusData(offset, count);
+        await res.status(200);
+        await res.render("v1/books/index", {books: books, searchQuery: null, pagesStatus: pagesStatus});
+    } catch (err) {
+        await res.status(500);
+        return await res.json({error: `Error in database during getting books list with offset ${offset} -> ${err}`});
+    }
 };
 
-function countBooksAmount(result: any, res: any, offset: any, searchQuery: string | null, sql: string, req: any) {
-    const foundBooksCountSQLQuery = (typeof searchQuery === null) ?
-        `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`
-        : composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${req.query.offset}`);
-    // connection.query(foundBooksCountSQLQuery, async (err, rowsCount) => {
-    //     try {
-    //         if (err) throw err;
-    //         const pagesStatus: any = assemblePagesStatusData(offset, await rowsCount[0].count);
-    //         await res.status(200);
-    //         await res.render("v1/books/index", {books: await result, searchQuery: searchQuery, pagesStatus: pagesStatus});
-    //     } catch (err) {
-    //         await res.status(500);
-    //         return await res.send({error: "Error during getting count of rows in talbe during getting book list: " + err});
-    //     }
-    // });
+async function countBooksAmount(result: any, res: any, offset: any, searchQuery: string | null, sql: string, req: any) {
+    try {
+        const foundBooksCountSQLQuery = (typeof searchQuery === null) ?
+            `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`
+            : composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${req.query.offset}`);
+        const countResp: any = await (await connection).query(foundBooksCountSQLQuery);
+        return countResp[0][0].count;
+    } catch (err) {
+        throw Error("Error during count books query -> " + err);        
+    }
 }
 
 function assemblePagesStatusData(offset: any, count: any) {
