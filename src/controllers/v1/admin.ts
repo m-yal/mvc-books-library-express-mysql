@@ -2,90 +2,82 @@ import connection from "../../models/utils/connection";
 
 const LIMIT: number = 20;
 
-export function deleteBook(req: any, res: any) {
-    const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
-    // connection.query(sql, (err, result) => {
-    //     try {
-    //         if (err) throw err;
-    //         const isSessionPermited = Boolean(result[0].dbResponse);
-    //         if (isSessionPermited) {
-    //             deleteBookQuery(req, res);
-    //         } else {
-    //             res.status(401);
-    //             res.redirect("http://localhost:3005/api/v1/auth");
-    //         }
-    //     } catch (err) {
-    //         console.error(err);
-    //         res.status(500);
-    //         res.redirect("http://localhost:3005/api/v1/auth");
-    //     }
-    // });
 
-    
+export async function deleteBook(req: any, res: any) {
+    try {
+        const isPermited: any = await isSessionPermited(req);
+        if (isPermited) {
+            deleteBookQuery(req, res);
+            await res.status(200);
+            await res.send({ok: true});
+        } else {
+            await res.status(401);
+            await res.redirect("http://localhost:3005/api/v1/auth");
+        }
+    } catch (err) {
+        await res.status(500);
+        res.redirect("http://localhost:3005/api/v1/auth");
+    }
 }
 
-function deleteBookQuery(req: any, res: any) {
-    const bookId: string = req.params.id;
-    const sql: string = `UPDATE books SET is_deleted = TRUE WHERE id = ${bookId}`;
-    // connection.query(sql, async (err, result) => {
-    //     try {
-    //         if (err) throw err;
-    //         await res.status(200);
-    //         await res.send({ok: true});
-    //     } catch (err) {
-    //         await res.status(500);
-    //         return await res.send({error: "Error during deleting"});
-    //     }
-    // });
+async function isSessionPermited(req: any) {
+    const checkSessionSQL = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
+    const sessionCheckResp: any = await (await connection).query(checkSessionSQL);
+    const isSessionPermited = Boolean(sessionCheckResp[0][0].dbResponse);
+    return isSessionPermited;
 }
 
-export function getBooks(req: any, res: any) {
-    const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
-    // connection.query(sql, (err, result) => {
-    //     try {
-    //         if (err) throw err;
-    //         const isSessionPermited = Boolean(result[0].dbResponse);
-    //         if (isSessionPermited) {
-    //             queryBooksList(req, res);
-    //         } else {
-    //             res.status(401);
-    //             res.redirect("http://localhost:3005/api/v1/auth");
-    //         }
-    //     } catch (err) {
-    //         console.error(err);
-    //         res.status(500);
-    //         res.redirect("http://localhost:3005/api/v1/auth");
-    //     }
-    // });
+async function deleteBookQuery(req: any, res: any) {
+    try {
+        const bookId: string = req.params.id;
+        const deleteSQL: string = `UPDATE books SET is_deleted = TRUE WHERE id = ${bookId}`;
+        await (await connection).query(deleteSQL);
+    } catch (err) {
+        throw Error("Error during deleting book from db query -> " + err);
+    }
 }
 
-function queryBooksList(req: any, res: any) {
-    const offset = req.query.offset || 0;
-    const sql = `SELECT * FROM books WHERE is_deleted = FALSE LIMIT ${LIMIT} OFFSET ${offset};`;
-    // connection.query(sql, async (err, books) => {
-    //     try {
-    //         if (err) throw err;
-    //         definePagesAmount(res, books, offset);
-    //     } catch (err) {
-    //         await res.status(500);
-    //         return await res.send({error: `Error in database during getting books list for admin with offset ${offset}: ${err}`})
-    //     }
-    // });
+export async function getBooks(req: any, res: any) {
+    try {
+        if (await isSessionPermited(req)) {
+            const books = await queryBooksList(req, res);
+            const count = await definePagesAmount(res, books, req.query.offset);
+            res.status(200);
+            await res.render("v1/admin/index", {books: books, pagesAmount: count / LIMIT, currentPage: (req.query.offset / LIMIT) + 1 });
+        } else {
+            res.status(401);
+            res.redirect("http://localhost:3005/api/v1/auth");
+        }
+    } catch (err) {
+        await res.status(500);
+        await res.json("Error during getting books for admin -> " + err);
+    }
+}
+
+async function queryBooksList(req: any, res: any) {
+    try {
+        const offset = req.query.offset || 0;
+        const booksListSQL = `SELECT * FROM books WHERE is_deleted = FALSE LIMIT ${LIMIT} OFFSET ${offset};`;
+        const booksResp = await (await connection).query(booksListSQL);
+        const books = booksResp[0];
+        return books;
+    } catch (err) {
+        throw Error(`Error in database during getting books list for admin with offset -> ${err}`);
+    }
 }
 
 async function definePagesAmount(res: any, books: any, offset: any) {
-    // connection.query(`SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`, async (err, rowsCount) => {
-    //     try {
-    //         if (err) throw err;
-    //         await res.render("v1/admin/index", {books: await books, pagesAmount: await rowsCount[0].count / LIMIT, currentPage: (offset / LIMIT) + 1 });
-    //     } catch (err) {
-    //         throw err;
-    //     }
-    // });
+    try {
+        const pagesCountSQL = `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`;
+        const countResp: any = await (await connection).query(pagesCountSQL);
+        const count = countResp[0][0].count;
+        return count;
+    } catch (err) {
+        throw Error("Error during defining pages amount -> " + err);
+    }
 }
 
 export async function addBook(req: any, res: any) {
-    console.log("INSIDE addBook");
     const sql = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE '%${req.sessionID}%' LIMIT 1) as dbResponse;`;
     // connection.query(sql, (err, result) => {
     //     try {
@@ -106,7 +98,7 @@ export async function addBook(req: any, res: any) {
     // });
 }
 
-function addBookQuery(req: any, res: any) {
+async function addBookQuery(req: any, res: any) {
     // connection.query(assembleAddBookSqlQuery(req), async (err, result) => {
     //     try {
     //         if (err) throw err;
@@ -122,5 +114,7 @@ function addBookQuery(req: any, res: any) {
 function assembleAddBookSqlQuery(req: any) {
     const {bookName, publishYear, author_1, author_2, author_3, description} = req.body;
     const imagePath = req.file?.filename || null;
-    return `INSERT INTO books(book_name, publish_year, image_path, book_description, author_1, author_2, author_3) VALUES ('${bookName}', ${publishYear || 0}, '${imagePath}', '${description}', '${author_1}', '${author_2}', '${author_3}');`;
+    return `INSERT INTO books(book_name, publish_year, image_path, book_description, author_1, 
+        author_2, author_3) VALUES ('${bookName}', ${publishYear || 0}, '${imagePath}', 
+        '${description}', '${author_1}', '${author_2}', '${author_3}');`;
 }

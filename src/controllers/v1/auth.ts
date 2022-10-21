@@ -1,6 +1,9 @@
 import { safeCompare } from "express-basic-auth";
 import connection from "../../models/utils/connection";
 import { Request, Response } from "express";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const authViewPathV1 = "v1/auth/index";
 const booksListV1Href = "http://localhost:3005/api/v1/";
