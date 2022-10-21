@@ -13,8 +13,9 @@
     "migration-v1:down": "npm run build && node dist/models/v1/sql-scripts/delete-all-tables.js",
     "delete-hard-v1": "npm run build && node dist/models/v1/sql-scripts/delete-hard.js",
     "migration-v2:up": "npm run build && node dist/models/v1/sql-scripts/migrate-to-v2.js",
-    "migration-v2:down": "npm run build && node dist/models/v1/sql-scripts/migrate-back-to-v1.js",
-    "delete-hard-v2": "npm run build && node dist/models/v2/sql-scripts/delete-hard.js"
+    "migration-v2:down": "npm run build && node dist/models/v2/sql-scripts/migrate-back-to-v1.js",
+    "delete-hard-v2": "npm run build && node dist/models/v2/sql-scripts/delete-hard.js",
+    "delete-all-tables": "npm run build && node dist/models/v2/sql-scripts/delete-all-tables.js"
   },
   "repository": {
     "type": "git",

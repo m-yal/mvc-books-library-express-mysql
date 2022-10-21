@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS authors, books, books_authors, sessions_v1;

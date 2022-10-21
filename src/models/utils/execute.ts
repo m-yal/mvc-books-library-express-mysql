@@ -7,8 +7,8 @@ export default async function executeSQLFile(sqlFileName: string, version: "v1" 
     const queries: string = readSQLFile(sqlFileName, version);
     try {
         let conn = await connection;
-        conn.query(queries);
-        conn.end();
+        await conn.query(queries);
+        await conn.end();
         console.log("SQL files executed, connection ended");
     } catch (err) {
         console.log(`Error during executing sql file ${sqlFileName} or ending connection`);
