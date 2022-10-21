@@ -16,6 +16,7 @@ exports.getBooks = void 0;
 const connection_1 = __importDefault(require("../../models/utils/connection"));
 const LIMIT = 20;
 const bookPageRenderPath = "v1/books/index";
+const countAllBooksSQL = `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`;
 function getBooks(req, res) {
     if (typeof req.query.search === "string") {
         search(req, res);
@@ -49,8 +50,7 @@ function countBooksAmount(result, res, offset, searchQuery, sql, req) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const foundBooksCountSQLQuery = (typeof searchQuery === null) ?
-                `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`
-                : composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${req.query.offset}`);
+                countAllBooksSQL : composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${req.query.offset}`);
             const countResp = yield (yield connection_1.default).query(foundBooksCountSQLQuery);
             return countResp[0][0].count;
         }
@@ -96,24 +96,6 @@ function composeSLQQuery(author, year, offset, searchQuery) {
     const offsetPart = `LIMIT ${LIMIT} OFFSET ${offset};`;
     return mainPart + " " + [authorPart, yearPart].join("") + " " + orderByPart + " " + offsetPart;
 }
-// function composeSLQQuery(author: string, year: string, offset: string, searchQuery: string): string {
-//     let sql: string;
-//     const authorQuery = author ? `autor_id = ${author}` : "";
-//     const yearQuery = year ? `year = ${year}` : "";
-//     const offsetQuery = `LIMIT ${LIMIT} OFFSET ${offset}`;
-//     if (!author && !year) {
-//         sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' ORDER BY book_name ASC ${offsetQuery};`;
-//     } else {
-//         if (author && year) {
-//             sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
-//         } else if (author) {
-//             sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${authorQuery} ORDER BY book_name ASC ${offsetQuery};`
-//         } else {
-//             sql = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%' AND ${yearQuery} ORDER BY book_name ASC ${offsetQuery};`;                
-//         }
-//     }
-//     return sql;
-// }
 function composeFoundBooksCountQuery(sql, offset) {
     return sql
         .replace("*", "COUNT(*) AS count")
