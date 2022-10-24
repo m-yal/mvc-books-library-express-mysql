@@ -125,8 +125,6 @@ function redirectToAdminPage(res) {
 function addBookDataQuery(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         const { bookName, publishYear, description, imagePath } = validateForXSS("mainData", req.body, req === null || req === void 0 ? void 0 : req.file);
-        // const {bookName, publishYear, description} = req.body;
-        // const imagePath = req.file?.filename || null;
         return yield (yield connection_1.default).query(addBookDataSQL, [bookName, publishYear || 0, imagePath, description, bookName])
             .then((result) => res.locals.bookId = result[0][1][0].id)
             .catch((err) => { throw Error("Error during add book query to db -> " + err); });

@@ -66,7 +66,7 @@ function countBooksAmount(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const foundBooksCountSQLQuery = (typeof res.locals.search === null) ? countAllBooksSQL : composeSearchCountSQL(res);
-            const [countResp] = yield (yield connection_1.default).query(foundBooksCountSQLQuery);
+            const [countResp] = yield (yield connection_1.default).query(foundBooksCountSQLQuery, ["%" + res.locals.search + "%"]);
             const count = yield countResp[0].count;
             res.locals.pagesStatus = yield assemblePagesStatusData(res.locals.offset, count);
         }
@@ -162,7 +162,7 @@ function queryMainBookData(res) {
 function composeSearchCountSQL(res) {
     const offset = res.locals.offset;
     const limitOffset = `LIMIT ${LIMIT} OFFSET ${offset}`;
-    return `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC ${limitOffset};`
+    return `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE ? ORDER BY book_name ASC ${limitOffset};`
         .replace("*", "COUNT(*) AS count")
         .replace("ORDER BY book_name ASC", "")
         .replace(limitOffset, "");

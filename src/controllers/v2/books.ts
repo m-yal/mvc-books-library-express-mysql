@@ -42,7 +42,7 @@ async function queryBooks(req: any, res: any) {
 async function countBooksAmount(req: any, res: any) {
     try {
         const foundBooksCountSQLQuery = (typeof res.locals.search === null) ? countAllBooksSQL : composeSearchCountSQL(res);
-        const [countResp]: any = await (await connection).query(foundBooksCountSQLQuery);
+        const [countResp]: any = await (await connection).query(foundBooksCountSQLQuery, ["%" + res.locals.search + "%"]);
         const count = await countResp[0].count;
         res.locals.pagesStatus = await assemblePagesStatusData(res.locals.offset, count);
     } catch (err) {
@@ -130,7 +130,7 @@ async function queryMainBookData(res: any) {
 function composeSearchCountSQL(res: any) {
     const offset = res.locals.offset;
     const limitOffset = `LIMIT ${LIMIT} OFFSET ${offset}`;
-    return  `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC ${limitOffset};`
+    return  `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE ? ORDER BY book_name ASC ${limitOffset};`
         .replace("*", "COUNT(*) AS count")
         .replace("ORDER BY book_name ASC", "")
         .replace(limitOffset, "");
