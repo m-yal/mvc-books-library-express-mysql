@@ -10,8 +10,10 @@ const booksListV1Href = "http://localhost:3005/api/v1/";
 const adminV1Href = "http://localhost:3005/api/v1/admin";
 const authV1Href = "http://localhost:3005/api/v1/auth";
 
-const loginSQL = `INSERT INTO sessions_v1(id) VALUES (?);`;
-const logoutSQL = `DELETE FROM sessions_v1 WHERE id=?;`;
+const sessionsTableName = "sessions_v1";
+
+const loginSQL = `INSERT INTO ${sessionsTableName}(id) VALUES (?);`;
+const logoutSQL = `DELETE FROM ${sessionsTableName} WHERE id=?;`;
 
 export function getAuthPage(req: any, res: any) {
     try {
