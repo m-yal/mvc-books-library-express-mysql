@@ -1,6 +1,7 @@
 import connection from "../../models/utils/connection";
 import { getAll } from "./books";
 import dotenv from "dotenv";
+import validator from "validator";
 
 dotenv.config();
 
@@ -92,8 +93,9 @@ async function redirectToAdminPage(res: any) {
 }
 
 async function addBookDataQuery(req: any, res: any) {
-    const {bookName, publishYear, description} = req.body;
-    const imagePath = req.file?.filename || null;
+    const { bookName, publishYear, description, imagePath } = validateForXSS("mainData", req.body, req?.file);
+    // const {bookName, publishYear, description} = req.body;
+    // const imagePath = req.file?.filename || null;
     return await (await connection).query(addBookDataSQL, [bookName, publishYear || 0, imagePath, description, bookName])
         .then((result: any) => res.locals.bookId = result[0][1][0].id)
         .catch((err: Error) => { throw Error("Error during add book query to db -> " + err) });
@@ -107,5 +109,22 @@ async function addAuthors(req: any, res: any) {
         const authorIdResponse: any = await (await connection).query(getAuthorsIdsSQL, author);
         const authorId: any = authorIdResponse[0][0].id;
         await res.locals.authorsIds.push(authorId); 
+    }
+}
+
+function validateForXSS(type: "mainData" | "authors", body: any, file?: any): any {
+    if (type === "mainData") {
+        return {
+            bookName: validator.escape(body.bookName),
+            publishYear: validator.escape(body.publishYear),
+            description: validator.escape(body.description),
+            imagePath: validator.escape(file.filename || null)
+        }
+    } else {
+        return [
+            validator.escape(body.author_1),
+            validator.escape(body.author_2),
+            validator.escape(body.author_3)
+        ]
     }
 }

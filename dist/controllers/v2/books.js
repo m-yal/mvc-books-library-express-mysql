@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAll = exports.getBooks = void 0;
 const connection_1 = __importDefault(require("../../models/utils/connection"));
+const validator_1 = __importDefault(require("validator"));
 const LIMIT = 20;
 const queryAllBooksSQL = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ? OFFSET ?;`;
 const countAllBooksSQL = `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`;
@@ -145,11 +146,11 @@ function search(req, res) {
 }
 ;
 function replaceQueryStringsToResponseLocals(req, res) {
-    res.locals.search = req.query.search;
-    res.locals.year = req.query.year;
-    res.locals.author = req.query.author;
-    res.locals.search = req.query.search;
-    res.locals.offset = req.query.offset || 0;
+    res.locals.search = req.query.search === undefined ? undefined : validator_1.default.escape(req.query.search);
+    res.locals.year = req.query.year === undefined ? undefined : validator_1.default.escape(req.query.year);
+    res.locals.author = req.query.author === undefined ? undefined : validator_1.default.escape(req.query.autho);
+    res.locals.search = req.query.search === undefined ? undefined : validator_1.default.escape(req.query.search);
+    res.locals.offset = req.query.offset === undefined ? "0" : validator_1.default.escape(req.query.offset);
 }
 function queryMainBookData(res) {
     return __awaiter(this, void 0, void 0, function* () {

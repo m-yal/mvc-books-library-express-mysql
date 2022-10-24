@@ -16,6 +16,7 @@ exports.addBook = exports.getBooks = exports.deleteBook = void 0;
 const connection_1 = __importDefault(require("../../models/utils/connection"));
 const books_1 = require("./books");
 const dotenv_1 = __importDefault(require("dotenv"));
+const validator_1 = __importDefault(require("validator"));
 dotenv_1.default.config();
 const authHref = `http://localhost:${process.env.PORT}/auth`;
 const sessionCheckSQL = `SELECT EXISTS(SELECT 1 FROM sessions_v1 WHERE id LIKE ? LIMIT 1) as dbResponse;`;
@@ -122,10 +123,10 @@ function redirectToAdminPage(res) {
     });
 }
 function addBookDataQuery(req, res) {
-    var _a;
     return __awaiter(this, void 0, void 0, function* () {
-        const { bookName, publishYear, description } = req.body;
-        const imagePath = ((_a = req.file) === null || _a === void 0 ? void 0 : _a.filename) || null;
+        const { bookName, publishYear, description, imagePath } = validateForXSS("mainData", req.body, req === null || req === void 0 ? void 0 : req.file);
+        // const {bookName, publishYear, description} = req.body;
+        // const imagePath = req.file?.filename || null;
         return yield (yield connection_1.default).query(addBookDataSQL, [bookName, publishYear || 0, imagePath, description, bookName])
             .then((result) => res.locals.bookId = result[0][1][0].id)
             .catch((err) => { throw Error("Error during add book query to db -> " + err); });
@@ -142,4 +143,21 @@ function addAuthors(req, res) {
             yield res.locals.authorsIds.push(authorId);
         }
     });
+}
+function validateForXSS(type, body, file) {
+    if (type === "mainData") {
+        return {
+            bookName: validator_1.default.escape(body.bookName),
+            publishYear: validator_1.default.escape(body.publishYear),
+            description: validator_1.default.escape(body.description),
+            imagePath: validator_1.default.escape(file.filename || null)
+        };
+    }
+    else {
+        return [
+            validator_1.default.escape(body.author_1),
+            validator_1.default.escape(body.author_2),
+            validator_1.default.escape(body.author_3)
+        ];
+    }
 }

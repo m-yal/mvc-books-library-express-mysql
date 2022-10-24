@@ -1,4 +1,5 @@
 import connection from "../../models/utils/connection";
+import validator from "validator";
 
 const LIMIT: number = 20;
 const queryAllBooksSQL = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ? OFFSET ?;`
@@ -113,11 +114,11 @@ async function search(req: any, res: any) {
 };
 
 function replaceQueryStringsToResponseLocals(req: any, res: any) {
-    res.locals.search = req.query.search;
-    res.locals.year = req.query.year;
-    res.locals.author = req.query.author;
-    res.locals.search = req.query.search;
-    res.locals.offset = req.query.offset || 0;
+    res.locals.search = req.query.search === undefined ? undefined : validator.escape(req.query.search);
+    res.locals.year = req.query.year === undefined ? undefined : validator.escape(req.query.year);
+    res.locals.author = req.query.author === undefined ? undefined : validator.escape(req.query.autho);
+    res.locals.search = req.query.search === undefined ? undefined : validator.escape(req.query.search);
+    res.locals.offset = req.query.offset === undefined ? "0" : validator.escape(req.query.offset);
 }
 
 async function queryMainBookData(res: any) {

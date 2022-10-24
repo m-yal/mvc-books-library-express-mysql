@@ -147,13 +147,3 @@ function addBookQuery(req, res) {
         }
     });
 }
-// function assembleAddBookSqlQuery(req: any) {
-//     const {bookName, publishYear, author_1, author_2, author_3, description} = req.body;
-//     const imagePath = req.file?.filename || null;
-//     return `INSERT INTO books(book_name, publish_year, image_path, book_description, author_1, 
-//         author_2, author_3) VALUES ('${bookName}', ${publishYear || 0}, '${imagePath}', 
-//         '${description}', '${author_1}', '${author_2}', '${author_3}');`;
-//     const addBookSQL = `INSERT INTO books(book_name, publish_year, image_path, book_description, author_1, 
-//         author_2, author_3) VALUES (?, ${publishYear || 0}, '${imagePath}', 
-//         '${description}', '${author_1}', '${author_2}', '${author_3}');`;
-// }

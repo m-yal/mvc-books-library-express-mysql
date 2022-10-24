@@ -30,7 +30,7 @@ app.use(session({
         const sid = uuidv4();
         console.log('Session id created: ' + sid);
         return sid;
-    },
+    }
 }))
 
 connection;

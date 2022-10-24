@@ -2,6 +2,7 @@ import { safeCompare } from "express-basic-auth";
 import connection from "../../models/utils/connection";
 import { Request, Response } from "express";
 import dotenv from "dotenv";
+import validator from "validator";
 
 dotenv.config();
 
@@ -31,11 +32,18 @@ export async function logout(req: any, res: any) {
 }
 
 export async function login(req: Request, res: Response) {
-    const {login, password} = req.body;
+    const {login, password} = validateForXSS(req.body);
     if (check(login, password)) {
         saveSessionIdAndRedirect(req, res);
     } else {
         redirectToAuth(res);
+    }
+}
+
+function validateForXSS(body: any) {
+    return {
+        login: validator.escape(body.login),
+        password: validator.escape(body.password)
     }
 }
 

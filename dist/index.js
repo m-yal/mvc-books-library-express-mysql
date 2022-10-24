@@ -32,7 +32,7 @@ exports.app.use((0, express_session_1.default)({
         const sid = (0, uuid_1.v4)();
         console.log('Session id created: ' + sid);
         return sid;
-    },
+    }
 }));
 connection_1.default;
 exports.app.use(express_1.default.static("public"));

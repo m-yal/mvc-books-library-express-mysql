@@ -16,6 +16,7 @@ exports.login = exports.logout = exports.getAuthPage = void 0;
 const express_basic_auth_1 = require("express-basic-auth");
 const connection_1 = __importDefault(require("../../models/utils/connection"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const validator_1 = __importDefault(require("validator"));
 dotenv_1.default.config();
 const authViewPath = "v2/auth/index";
 const booksListHref = `http://localhost:${process.env.PORT}/`;
@@ -46,7 +47,7 @@ function logout(req, res) {
 exports.logout = logout;
 function login(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { login, password } = req.body;
+        const { login, password } = validateForXSS(req.body);
         if (check(login, password)) {
             saveSessionIdAndRedirect(req, res);
         }
@@ -56,6 +57,12 @@ function login(req, res) {
     });
 }
 exports.login = login;
+function validateForXSS(body) {
+    return {
+        login: validator_1.default.escape(body.login),
+        password: validator_1.default.escape(body.password)
+    };
+}
 function saveSessionIdAndRedirect(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
