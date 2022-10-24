@@ -92,7 +92,8 @@ function queryAuthorsNames(req, res, id) {
 function incrCounter(type, bookId) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            return yield (yield connection_1.default).query(`UPDATE books SET ${type} = ${type} + 1 WHERE id = ${bookId};`);
+            const incrCounterSQL = `UPDATE books SET ${type} = ${type} + 1 WHERE id = ?;`;
+            return yield (yield connection_1.default).query(incrCounterSQL, [bookId]);
         }
         catch (err) {
             throw Error(`Error during increasing ${type} counter of book ${bookId} -> ${err}`);

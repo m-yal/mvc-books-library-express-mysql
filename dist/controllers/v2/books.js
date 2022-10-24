@@ -18,6 +18,7 @@ const validator_1 = __importDefault(require("validator"));
 const LIMIT = 20;
 const queryAllBooksSQL = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ? OFFSET ?;`;
 const countAllBooksSQL = `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`;
+const searchSQL = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE ? ORDER BY book_name ASC LIMIT ? OFFSET ?;`;
 const adminViewPath = "v2/admin/index";
 const booksViewPath = `v2/books/index`;
 function getBooks(req, res) {
@@ -150,22 +151,13 @@ function replaceQueryStringsToResponseLocals(req, res) {
     res.locals.year = req.query.year === undefined ? undefined : validator_1.default.escape(req.query.year);
     res.locals.author = req.query.author === undefined ? undefined : validator_1.default.escape(req.query.autho);
     res.locals.search = req.query.search === undefined ? undefined : validator_1.default.escape(req.query.search);
-    res.locals.offset = req.query.offset === undefined ? "0" : validator_1.default.escape(req.query.offset);
+    res.locals.offset = req.query.offset === undefined ? 0 : Number(validator_1.default.escape(req.query.offset));
 }
 function queryMainBookData(res) {
     return __awaiter(this, void 0, void 0, function* () {
-        const [booksData] = yield (yield connection_1.default).query(composeSLQSearchQuery(res));
+        const [booksData] = yield (yield connection_1.default).query(searchSQL, ["%" + res.locals.search + "%", LIMIT, res.locals.offset]);
         res.locals.books = booksData;
     });
-}
-function composeSLQSearchQuery(res) {
-    const search = res.locals.search;
-    const main = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${search}%'`;
-    const author = res.locals.author ? ` AND autor_id = ${res.locals.author}` : "";
-    const year = res.locals.year ? ` AND year = ${res.locals.year}` : "";
-    const orderBy = `ORDER BY book_name ASC`;
-    const offset = `LIMIT ${LIMIT} OFFSET ${res.locals.offset};`;
-    return main + " " + [author, year].join("") + " " + orderBy + " " + offset;
 }
 function composeSearchCountSQL(res) {
     const offset = res.locals.offset;

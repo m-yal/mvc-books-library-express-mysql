@@ -4,6 +4,7 @@ import validator from "validator";
 const LIMIT: number = 20;
 const queryAllBooksSQL = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ? OFFSET ?;`
 const countAllBooksSQL = `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`;
+const searchSQL = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE ? ORDER BY book_name ASC LIMIT ? OFFSET ?;`;
 const adminViewPath = "v2/admin/index";
 const booksViewPath = `v2/books/index`;
 
@@ -118,22 +119,12 @@ function replaceQueryStringsToResponseLocals(req: any, res: any) {
     res.locals.year = req.query.year === undefined ? undefined : validator.escape(req.query.year);
     res.locals.author = req.query.author === undefined ? undefined : validator.escape(req.query.autho);
     res.locals.search = req.query.search === undefined ? undefined : validator.escape(req.query.search);
-    res.locals.offset = req.query.offset === undefined ? "0" : validator.escape(req.query.offset);
+    res.locals.offset = req.query.offset === undefined ? 0 : Number(validator.escape(req.query.offset));
 }
 
 async function queryMainBookData(res: any) {
-    const [ booksData ] = await (await connection).query(composeSLQSearchQuery(res)); 
+    const [ booksData ] = await (await connection).query(searchSQL, ["%" + res.locals.search + "%", LIMIT, res.locals.offset]); 
     res.locals.books = booksData;
-}
-
-function composeSLQSearchQuery(res: any): string {
-    const search = res.locals.search;
-    const main = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${search}%'`;
-    const author = res.locals.author ? ` AND autor_id = ${res.locals.author}` : "";
-    const year = res.locals.year ? ` AND year = ${res.locals.year}` : "";
-    const orderBy = `ORDER BY book_name ASC`;
-    const offset = `LIMIT ${LIMIT} OFFSET ${res.locals.offset};`;
-    return main + " " + [author, year].join("") + " " + orderBy + " " + offset; 
 }
 
 function composeSearchCountSQL(res: any) {

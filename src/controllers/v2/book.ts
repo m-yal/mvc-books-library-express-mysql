@@ -67,7 +67,8 @@ async function queryAuthorsNames(req:any, res:any, id: any) {
 
 async function incrCounter(type: 'visits' | 'wants', bookId: string): Promise<any> {
     try {
-        return await (await connection).query(`UPDATE books SET ${type} = ${type} + 1 WHERE id = ${bookId};`); 
+        const incrCounterSQL = `UPDATE books SET ${type} = ${type} + 1 WHERE id = ?;`;
+        return await (await connection).query(incrCounterSQL, [bookId]); 
     } catch (err) {
         throw Error(`Error during increasing ${type} counter of book ${bookId} -> ${err}`);
     }

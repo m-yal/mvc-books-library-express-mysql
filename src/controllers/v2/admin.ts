@@ -94,8 +94,6 @@ async function redirectToAdminPage(res: any) {
 
 async function addBookDataQuery(req: any, res: any) {
     const { bookName, publishYear, description, imagePath } = validateForXSS("mainData", req.body, req?.file);
-    // const {bookName, publishYear, description} = req.body;
-    // const imagePath = req.file?.filename || null;
     return await (await connection).query(addBookDataSQL, [bookName, publishYear || 0, imagePath, description, bookName])
         .then((result: any) => res.locals.bookId = result[0][1][0].id)
         .catch((err: Error) => { throw Error("Error during add book query to db -> " + err) });
