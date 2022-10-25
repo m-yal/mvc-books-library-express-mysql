@@ -1,5 +1,6 @@
 import express from "express";
 import {login, logout, getAuthPage} from "../../controllers/v2/auth";
+import csrf from 'csurf';
 
 const authRouter = express.Router();
 

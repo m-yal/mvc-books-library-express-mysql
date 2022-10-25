@@ -21,7 +21,7 @@ export async function getAll(req: any, res: any, isAdmin: boolean) {
         await queryBooks(req, res); 
         await countBooksAmount(req, res);
         await queryAuthors(res);
-        await renderResult(res, isAdmin);
+        await renderResult(res, isAdmin, req);
     } catch (err) {
         await res.status(500);
         await res.json("Error occured during getting books list -> " + err)
@@ -41,9 +41,16 @@ async function queryBooks(req: any, res: any) {
 
 async function countBooksAmount(req: any, res: any) {
     try {
-        const foundBooksCountSQLQuery = (typeof res.locals.search === null) ? countAllBooksSQL : composeSearchCountSQL(res);
-        const [countResp]: any = await (await connection).query(foundBooksCountSQLQuery, ["%" + res.locals.search + "%"]);
-        const count = await countResp[0].count;
+        const isSearchQuery = typeof res.locals.search === null;
+        let count;
+        if (isSearchQuery) {
+            const foundBooksCountSQLQuery = composeSearchCountSQL(res);
+            const [countResp]: any = await (await connection).query(foundBooksCountSQLQuery, ["%" + res.locals.search + "%"]);
+            count = await countResp[0].count;
+        } else {
+            const [countResp]: any = await (await connection).query(countAllBooksSQL);
+            count = await countResp[0].count;
+        }
         res.locals.pagesStatus = await assemblePagesStatusData(res.locals.offset, count);
     } catch (err) {
         throw Error ("Error during querying found books count from db -> " + err);
@@ -62,7 +69,7 @@ async function queryAuthors(res: any) {
     }
 }
 
-async function renderResult(res: any, isAdmin: boolean) {
+async function renderResult(res: any, isAdmin: boolean, req: any) {
     try {
         await res.status(200);
         if (isAdmin) {
@@ -118,12 +125,11 @@ function replaceQueryStringsToResponseLocals(req: any, res: any) {
     res.locals.search = req.query.search === undefined ? undefined : validator.escape(req.query.search);
     res.locals.year = req.query.year === undefined ? undefined : validator.escape(req.query.year);
     res.locals.author = req.query.author === undefined ? undefined : validator.escape(req.query.autho);
-    res.locals.search = req.query.search === undefined ? undefined : validator.escape(req.query.search);
     res.locals.offset = req.query.offset === undefined ? 0 : Number(validator.escape(req.query.offset));
 }
 
 async function queryMainBookData(res: any) {
-    const [ booksData ] = await (await connection).query(searchSQL, ["%" + res.locals.search + "%", LIMIT, res.locals.offset]); 
+    const [ booksData ] = await (await connection).query(searchSQL, ["%" + res.locals.search + "%", LIMIT, res.locals.offset]);
     res.locals.books = booksData;
 }
 

@@ -39,7 +39,7 @@ function getAll(req, res, isAdmin) {
             yield queryBooks(req, res);
             yield countBooksAmount(req, res);
             yield queryAuthors(res);
-            yield renderResult(res, isAdmin);
+            yield renderResult(res, isAdmin, req);
         }
         catch (err) {
             yield res.status(500);
@@ -65,9 +65,17 @@ function queryBooks(req, res) {
 function countBooksAmount(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const foundBooksCountSQLQuery = (typeof res.locals.search === null) ? countAllBooksSQL : composeSearchCountSQL(res);
-            const [countResp] = yield (yield connection_1.default).query(foundBooksCountSQLQuery, ["%" + res.locals.search + "%"]);
-            const count = yield countResp[0].count;
+            const isSearchQuery = typeof res.locals.search === null;
+            let count;
+            if (isSearchQuery) {
+                const foundBooksCountSQLQuery = composeSearchCountSQL(res);
+                const [countResp] = yield (yield connection_1.default).query(foundBooksCountSQLQuery, ["%" + res.locals.search + "%"]);
+                count = yield countResp[0].count;
+            }
+            else {
+                const [countResp] = yield (yield connection_1.default).query(countAllBooksSQL);
+                count = yield countResp[0].count;
+            }
             res.locals.pagesStatus = yield assemblePagesStatusData(res.locals.offset, count);
         }
         catch (err) {
@@ -89,7 +97,7 @@ function queryAuthors(res) {
         }
     });
 }
-function renderResult(res, isAdmin) {
+function renderResult(res, isAdmin, req) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield res.status(200);
@@ -148,9 +156,9 @@ function search(req, res) {
 ;
 function replaceQueryStringsToResponseLocals(req, res) {
     res.locals.search = req.query.search === undefined ? undefined : validator_1.default.escape(req.query.search);
+    console.log("res.locals.search " + res.locals.search);
     res.locals.year = req.query.year === undefined ? undefined : validator_1.default.escape(req.query.year);
     res.locals.author = req.query.author === undefined ? undefined : validator_1.default.escape(req.query.autho);
-    res.locals.search = req.query.search === undefined ? undefined : validator_1.default.escape(req.query.search);
     res.locals.offset = req.query.offset === undefined ? 0 : Number(validator_1.default.escape(req.query.offset));
 }
 function queryMainBookData(res) {
