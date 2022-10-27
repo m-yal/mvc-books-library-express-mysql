@@ -96,4 +96,3 @@ function hardDelete(dbVersion) {
         console.log(`Hard deletion in db version ${dbVersion} executed.`);
     });
 }
-console.log("process.cwd() " + process.cwd());

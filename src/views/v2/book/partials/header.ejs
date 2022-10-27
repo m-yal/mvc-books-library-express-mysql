@@ -11,10 +11,13 @@
                             <input id="search" type="text" placeholder="Найти книгу" class="form-control">
                             <script>
                               $("#search").bind("keypress", function (e) {
-                                  if (e.keyCode == 13) {
-                                      e.preventDefault();
-                                      alert("а вот это придется сделать самому. Ваш @rshmelev");
-                                  }
+                                    if (e.keyCode == 13) {
+                                        e.preventDefault();
+                                        const searchQuery = $("#search").val();
+                                        const url = `http://localhost:3005/?search=${searchQuery}`;
+                                        alert(url)
+                                        window.location.href = url;
+                                    }
                               })
                             </script>
                             <div class="loader"><img src="./book-page_files/loading.gif"></div>
