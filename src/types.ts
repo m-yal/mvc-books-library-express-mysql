@@ -1,5 +1,5 @@
 import express from "express";
-import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from "mysql2";
+import { FieldPacket, RowDataPacket } from "mysql2";
 
 export type ApiVersion = "v1" | "v2";
 export type Request = express.Request;
@@ -9,3 +9,5 @@ export type Book = {id: string, book_name: string, publish_year: string, image_p
     pages?: string, isbn?: string, is_deleted: string, visits: string, wants: string};
 export type DBResponse = [RowDataPacket[], FieldPacket[]];
 export type ActionCounterType = "visits" | "wants";
+export type PagesStatusObj = {offsetAhead: number, offsetBack: number, totalyFound: number, hasNextPage?: boolean, hasPrevPage?: boolean};
+export type SearchQueryData = {author: string, year: string, search: string, offset: number};
