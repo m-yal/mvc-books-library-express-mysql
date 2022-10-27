@@ -22,12 +22,12 @@ function getBook(req, res) {
             const queryResp = yield (yield connection_1.default).query(getBookSQL, [bookId]);
             const book = queryResp[0][0];
             yield incrCounter("visits", req, res, bookId);
-            yield res.status(200);
-            yield res.render("v1/book/index", { book: book });
+            res.status(200);
+            res.render("v1/book/index", { book: book });
         }
         catch (err) {
-            yield res.status(500);
-            yield res.json({ error: `Error in database during getting single book with id ${req.params.bookId}: ${err}` });
+            res.status(500);
+            res.json({ error: `Error in database during getting single book with id ${req.params.bookId}: ${err}` });
         }
     });
 }

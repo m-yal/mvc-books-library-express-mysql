@@ -22,12 +22,12 @@ function getBook(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield queryBookData(req, res);
-            yield res.status(200);
-            yield res.render(singleBookViewPath, { book: res.locals.book });
+            res.status(200);
+            res.render(singleBookViewPath, { book: res.locals.book });
         }
         catch (err) {
-            yield res.status(500);
-            yield res.json({ error: "Error during getting single book -> " + err });
+            res.status(500);
+            res.json({ error: "Error during getting single book -> " + err });
         }
     });
 }
