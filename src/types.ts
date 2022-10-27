@@ -11,3 +11,4 @@ export type DBResponse = [RowDataPacket[], FieldPacket[]];
 export type ActionCounterType = "visits" | "wants";
 export type PagesStatusObj = {offsetAhead: number, offsetBack: number, totalyFound: number, hasNextPage?: boolean, hasPrevPage?: boolean};
 export type SearchQueryData = {author: string, year: string, search: string, offset: number};
+export type Credentials = {login: string, password: string};

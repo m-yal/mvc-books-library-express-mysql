@@ -1,21 +1,21 @@
 import { safeCompare } from "express-basic-auth";
 import connection from "../../models/utils/connection";
-import { Request, Response } from "express";
 import dotenv from "dotenv";
+import {Request, Response, Credentials} from "../../types";
 
 dotenv.config();
 
-const authViewPathV1 = "v1/auth/index";
-const booksListV1Href = "http://localhost:3005/api/v1/";
-const adminV1Href = "http://localhost:3005/api/v1/admin";
-const authV1Href = "http://localhost:3005/api/v1/auth";
+const authViewPathV1: string = "v1/auth/index";
+const booksListV1Href: string = "http://localhost:3005/api/v1/";
+const adminV1Href: string = "http://localhost:3005/api/v1/admin";
+const authV1Href: string = "http://localhost:3005/api/v1/auth";
 
-const sessionsTableName = "sessions_v1";
+const sessionsTableName: string = "sessions_v1";
 
-const loginSQL = `INSERT INTO ${sessionsTableName}(id) VALUES (?);`;
-const logoutSQL = `DELETE FROM ${sessionsTableName} WHERE id=?;`;
+const loginSQL: string = `INSERT INTO ${sessionsTableName}(id) VALUES (?);`;
+const logoutSQL: string = `DELETE FROM ${sessionsTableName} WHERE id=?;`;
 
-export function getAuthPage(req: any, res: any) {
+export function getAuthPage(req: Request, res: Response): void {
     try {
         res.status(200);
         res.render(authViewPathV1);        
@@ -25,20 +25,20 @@ export function getAuthPage(req: any, res: any) {
     }
 }
 
-export async function logout(req: any, res: any) {
+export async function logout(req: Request, res: Response): Promise<void> {
     try {
         await (await connection).query(logoutSQL, [req.sessionID]);
-        await res.clearCookie("sid");
-        await res.redirect(booksListV1Href);
+        res.clearCookie("sid");
+        res.redirect(booksListV1Href);
     } catch (err) {
         res.status(500);
         res.redirect(adminV1Href);
     }
 }
 
-export async function login(req: Request, res: Response) {
+export async function login(req: Request, res: Response): Promise<void> {
     try {
-        const {login, password} = req.body;
+        const {login, password}: Credentials = await req.body;
         if (check(login, password)) {
             await (await connection).query(loginSQL, [req.sessionID]);
             res.redirect(adminV1Href);
@@ -53,7 +53,7 @@ export async function login(req: Request, res: Response) {
 }
 
 function check(login: string, pass: string): boolean {
-    let valid = true;
-    valid = safeCompare(login, process.env.LOGIN + "") && valid;
-    return safeCompare(pass, process.env.PASS + "") && valid;
+    let valid: boolean = true;
+    valid = safeCompare(login, process.env.ADMIN_LOGIN + "") && valid;
+    return safeCompare(pass, process.env.ADMIN_PASS + "") && valid;
 }
