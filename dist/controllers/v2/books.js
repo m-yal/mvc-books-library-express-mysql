@@ -156,7 +156,6 @@ function search(req, res) {
 ;
 function replaceQueryStringsToResponseLocals(req, res) {
     res.locals.search = req.query.search === undefined ? undefined : validator_1.default.escape(req.query.search);
-    console.log("res.locals.search " + res.locals.search);
     res.locals.year = req.query.year === undefined ? undefined : validator_1.default.escape(req.query.year);
     res.locals.author = req.query.author === undefined ? undefined : validator_1.default.escape(req.query.autho);
     res.locals.offset = req.query.offset === undefined ? 0 : Number(validator_1.default.escape(req.query.offset));

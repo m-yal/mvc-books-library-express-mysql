@@ -1,13 +1,19 @@
 import express from "express";
-import { upload } from "../../index";
-import { deleteBook, getBooks, addBook } from "../../controllers/v2/admin";
-import csrf from 'csurf';
+import multer from "multer";
+import path from "path";
 
 const adminRouter = express.Router();
-const csrfProtect = csrf({ cookie: true });
 
-adminRouter.delete("/admin/delete/:id", csrfProtect, deleteBook);
+const storage = multer.diskStorage({
+    destination: (req, image, cb) => cb(null, './public/images/'),
+    filename: (req, image, cb) => cb(null, Date.now() + path.extname(image.originalname))
+})
+const upload = multer({storage: storage});
+
+
+import { deleteBook, getBooks, addBook } from "../../controllers/v2/admin";
+adminRouter.delete("/admin/delete/:id", deleteBook);
 adminRouter.get("/admin", getBooks);
-adminRouter.post("/admin/add", csrfProtect, upload.single("image"), addBook);
+adminRouter.post("/admin/add", upload.single("image"), addBook);
 
 export default adminRouter;

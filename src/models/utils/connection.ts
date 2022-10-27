@@ -1,5 +1,5 @@
-// import mysql from "mysql2";
 import mysql from "mysql2/promise";
+import dotenv from "dotenv";
 
 const connection = mysql.createConnection({
     host: "localhost",
