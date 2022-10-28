@@ -1,8 +1,8 @@
-import express from "express";
+import express, { Router } from "express";
 import { deleteBook, getBooks, addBook } from "../../controllers/v1/admin";
 import upload from "../../middlewares/multer";
 
-const adminRouter = express.Router();
+const adminRouter: Router = express.Router();
 
 adminRouter.delete("/admin/delete/:id", deleteBook);
 adminRouter.get("/admin", getBooks);

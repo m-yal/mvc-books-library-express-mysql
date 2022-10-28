@@ -4,7 +4,7 @@ import {bookRouter as singleBookRouterV1} from "./book";
 import authRouterV1 from "./auth";
 import { app } from "../../index";
 
-export default function activateAllV1Routers() {
+export default function activateAllV1Routers(): void {
     app.use("/api/v1", booksRouterV1); //get list of books
     app.use("/api/v1", singleBookRouterV1); //get single book
     app.use("/api/v1", authRouterV1);
