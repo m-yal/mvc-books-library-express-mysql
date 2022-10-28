@@ -1,16 +1,12 @@
 import connection from "../../models/utils/connection";
 import { DBResponse, Request, Response, ActionCounterType } from "../../types";
-
-const singleBookViewPath: string = "v2/book/index";
-const getBookIdSQL: string = `SELECT * FROM books WHERE id = ? AND is_deleted = FALSE;`;
-const getAuthorsIdsSQL: string = `SELECT author_id FROM books_authors WHERE book_id = ?;`;
-const getAuthorNameSQL: string = `SELECT author FROM authors WHERE id = ?;`;
+import { getAuthorNameSQLV2, getSingleAuthorIdsSQLV2, getBookIdSQLV2, singleBookViewPathV2 } from "../../constants";
 
 export async function getBook(req: Request, res: Response): Promise<void> {
     try {
         await queryBookData(req, res);
         res.status(200);
-        res.render(singleBookViewPath, {book: res.locals.book});
+        res.render(singleBookViewPathV2, {book: res.locals.book});
     } catch (err) {
         res.status(500);
         res.json({error: "Error during getting single book -> " + err});
@@ -33,7 +29,7 @@ async function queryBookData(req: Request, res: Response): Promise<void> {
 
 async function queryBookById(res: Response, bookId: string): Promise<void> {
     try {
-        const bookIdResponse: DBResponse = await (await connection).query(getBookIdSQL, [bookId]); 
+        const bookIdResponse: DBResponse = await (await connection).query(getBookIdSQLV2, [bookId]); 
         res.locals.book = bookIdResponse[0][0];
     } catch (err) {
         throw Error("Error during querying book data by id: " + err);
@@ -42,7 +38,7 @@ async function queryBookById(res: Response, bookId: string): Promise<void> {
 
 async function queryAuthors(req: Request, res: Response, bookId: string): Promise<void> {
     try {
-        const authorsIdsResponse: DBResponse = await (await connection).query(getAuthorsIdsSQL, [bookId]); 
+        const authorsIdsResponse: DBResponse = await (await connection).query(getSingleAuthorIdsSQLV2, [bookId]); 
         res.locals.authors_ids = authorsIdsResponse[0]; 
         const authorsAmount: number = res.locals.authors_ids.length;
         const queries: void[] = [];
@@ -58,7 +54,7 @@ async function queryAuthors(req: Request, res: Response, bookId: string): Promis
 
 async function queryAuthorsNames(req: Request, res: Response, id: string): Promise<void> {
     try {
-        const authorsNamesResponse: DBResponse = await (await connection).query(getAuthorNameSQL, [id]);
+        const authorsNamesResponse: DBResponse = await (await connection).query(getAuthorNameSQLV2, [id]);
         const name: string = authorsNamesResponse[0][0].author;
         res.locals.authors.push(name);
     } catch (err) {

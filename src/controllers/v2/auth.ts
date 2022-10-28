@@ -3,31 +3,23 @@ import connection from "../../models/utils/connection";
 import dotenv from "dotenv";
 import validator from "validator";
 import {Request, Response, Credentials} from "../../types";
+import { adminHrefV2, authHrefV2, authViewPathV2, booksListHrefV2, deleteSessionSQLV2, insertSessionSQLV2 } from "../../constants";
 
 dotenv.config();
 
-const authViewPath: string = "v2/auth/index";
-
-const booksListHref: string = `http://localhost:${process.env.PORT}/`;
-const adminHref: string = `http://localhost:${process.env.PORT}/admin`;
-const authHref: string = `http://localhost:${process.env.PORT}/auth`;
-
-const deleteSessionSQL: string = `DELETE FROM sessions_v1 WHERE id = ?;`;
-const insertSessionSQL: string = `INSERT INTO sessions_v1(id) VALUES (?);`
-
 export async function getAuthPage(req: Request, res: Response): Promise<void> {
     res.status(200);
-    res.render(authViewPath);
+    res.render(authViewPathV2);
 }
 
 export async function logout(req: Request, res: Response): Promise<void> {
     try {
-        await (await connection).query(deleteSessionSQL, [req.sessionID]);
+        await (await connection).query(deleteSessionSQLV2, [req.sessionID]);
         res.clearCookie("sid");
-        res.redirect(booksListHref);
+        res.redirect(booksListHrefV2);
     } catch (err) {
         res.status(500);
-        res.redirect(adminHref);
+        res.redirect(adminHrefV2);
     }
 }
 
@@ -49,18 +41,18 @@ function validateForXSS(body: any): Credentials {
 
 async function saveSessionIdAndRedirect(req: Request, res: Response): Promise<void> {
     try {
-        await (await connection).query(insertSessionSQL, [req.sessionID]);
+        await (await connection).query(insertSessionSQLV2, [req.sessionID]);
         res.status(301);
-        res.redirect(adminHref);
+        res.redirect(adminHrefV2);
     } catch (err) {
         res.status(500);
-        res.redirect(authHref);
+        res.redirect(authHrefV2);
     }
 }
 
 function redirectToAuth(res: Response): void {
     res.status(401);
-    res.redirect(authHref);
+    res.redirect(authHrefV2);
 }
 
 function check(login: string, pass: string): boolean {
