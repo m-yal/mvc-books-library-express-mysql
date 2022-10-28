@@ -1,49 +1,50 @@
+import { RowDataPacket } from "mysql2";
 import connection from "../../models/utils/connection";
+import { AddingBook, DBResponse, InputImage, Request, Response } from "../../types";
 
 const LIMIT: number = 20;
 
-const adminV1Href = "http://localhost:3005/api/v1/admin";
-const authV1Href = "http://localhost:3005/api/v1/auth";
+const adminV1Href: string = "http://localhost:3005/api/v1/admin";
+const authV1Href: string = "http://localhost:3005/api/v1/auth";
 
-const adminV1View = "v1/admin/index";
+const adminV1View: string = "v1/admin/index";
 
-const sessionsTableName = "sessions_v1";
-const booksV1TableName = "books";
+const sessionsTableName: string = "sessions_v1";
+const booksV1TableName: string = "books";
 
-const sessionChechSQL = `SELECT EXISTS(SELECT 1 FROM ${sessionsTableName} WHERE id LIKE ? LIMIT 1) as dbResponse;`
-const deleteBookSQL = `UPDATE ${booksV1TableName} SET is_deleted = TRUE WHERE id = ?`;
-const booksListSQL = `SELECT * FROM ${booksV1TableName} WHERE is_deleted = FALSE LIMIT ? OFFSET ?;`;
-const pagesCountSQL = `SELECT COUNT(*) AS count FROM ${booksV1TableName} WHERE is_deleted = FALSE;`;
-const addBookSQL = `INSERT INTO ${booksV1TableName}(book_name, publish_year, image_path, book_description, author_1, 
+const sessionChechSQL: string = `SELECT EXISTS(SELECT 1 FROM ${sessionsTableName} WHERE id LIKE ? LIMIT 1) as dbResponse;`
+const deleteBookSQL: string = `UPDATE ${booksV1TableName} SET is_deleted = TRUE WHERE id = ?`;
+const booksListSQL: string = `SELECT * FROM ${booksV1TableName} WHERE is_deleted = FALSE LIMIT ? OFFSET ?;`;
+const pagesCountSQL: string = `SELECT COUNT(*) AS count FROM ${booksV1TableName} WHERE is_deleted = FALSE;`;
+const addBookSQL: string = `INSERT INTO ${booksV1TableName}(book_name, publish_year, image_path, book_description, author_1, 
     author_2, author_3) VALUES (?, ?, ?, ?, ?, ?, ?);`;
 
-export async function deleteBook(req: any, res: any) {
+export async function deleteBook(req: Request, res: Response): Promise<void> {
     try {
         if (await isSessionPermited(req)) {
-            deleteBookQuery(req, res);
-            await res.status(200);
-            await res.send({ok: true});
+            await deleteBookQuery(req);
+            res.status(200);
+            res.send({ok: true});
         } else {
-            await res.status(401);
-            await res.redirect(authV1Href);
+            res.status(401);
+            res.redirect(authV1Href);
         }
     } catch (err) {
-        await res.status(500);
+        res.status(500);
         res.redirect(authV1Href);
     }
 }
 
-async function isSessionPermited(req: any) {
+async function isSessionPermited(req: Request): Promise<boolean> {
     try {
-        const sessionCheckResp: any = await (await connection).query(sessionChechSQL, [req.sessionID]);
-        const isSessionPermited = Boolean(sessionCheckResp[0][0].dbResponse);
-        return isSessionPermited;
+        const sessionCheckResp: DBResponse = await (await connection).query(sessionChechSQL, [req.sessionID]);
+        return Boolean(sessionCheckResp[0][0].dbResponse);
     } catch (err) {
         throw Error("Error during checking session presence in db -> ");
     }
 }
 
-async function deleteBookQuery(req: any, res: any) {
+async function deleteBookQuery(req: Request): Promise<void> {
     try {
         await (await connection).query(deleteBookSQL, [req.params.id]);
     } catch (err) {
@@ -51,65 +52,64 @@ async function deleteBookQuery(req: any, res: any) {
     }
 }
 
-export async function getBooks(req: any, res: any) {
+export async function getBooks(req: Request, res: Response): Promise<void> {
     try {
         if (await isSessionPermited(req)) {
-            const books = await queryBooksList(req, res);
-            const count = await definePagesAmount(res, books, req.query.offset);
-            await res.status(200);
-            await res.render(adminV1View, {books: books, pagesAmount: count / LIMIT, currentPage: (req.query.offset / LIMIT) + 1 });
+            const books: RowDataPacket[] = await queryBooksList(req);
+            const count: number = await definePagesAmount();
+            res.status(200);
+            res.render(adminV1View, {books: books, pagesAmount: count / LIMIT, currentPage: (Number(req.query.offset) / LIMIT) + 1 });
         } else {
-            await res.status(401);
-            await res.redirect(authV1Href);
+            res.status(401);
+            res.redirect(authV1Href);
         }
     } catch (err) {
-        await res.status(500);
-        await res.json("Error during getting books for admin -> " + err);
+        res.status(500);
+        res.json("Error during getting books for admin -> " + err);
     }
 }
 
-async function queryBooksList(req: any, res: any) {
+async function queryBooksList(req: Request): Promise<RowDataPacket[]> {
     try {
-        const offset: number = req.query.offset || 0;
-        const booksResp = await (await connection).query(booksListSQL, [Number(LIMIT), Number(offset)]);
-        const books = booksResp[0];
+        const offset: number = Number(req.query.offset) || 0;
+        const booksResp: DBResponse = await (await connection).query(booksListSQL, [Number(LIMIT), Number(offset)]);
+        const books: RowDataPacket[] = booksResp[0];
         return books;
     } catch (err) {
         throw Error(`Error in database during getting books list for admin with offset -> ${err}`);
     }
 }
 
-async function definePagesAmount(res: any, books: any, offset: any) {
+async function definePagesAmount(): Promise<number> {
     try {
-        const countResp: any = await (await connection).query(pagesCountSQL);
-        const count = countResp[0][0].count;
-        return count;
+        const countResp: DBResponse = await (await connection).query(pagesCountSQL);
+        return countResp[0][0].count;
     } catch (err) {
         throw Error("Error during defining pages amount -> " + err);
     }
 }
 
-export async function addBook(req: any, res: any) {
+export async function addBook(req: Request, res: Response): Promise<void> {
     try {
         if (await isSessionPermited(req)) {
             addBookQuery(req, res);
         } else {
-            await res.status(401);
-            await res.redirect(authV1Href);
+            res.status(401);
+            res.redirect(authV1Href);
         }
     } catch (err) {
-        await res.status(500);
-        await res.redirect(authV1Href);
+        res.status(500);
+        res.redirect(authV1Href);
     }
 }
 
-async function addBookQuery(req: any, res: any) {
+async function addBookQuery(req: Request, res: Response): Promise<void> {
     try {
-        const {bookName, publishYear, author_1, author_2, author_3, description} = req.body;
-        const imagePath = req.file?.filename || null;
+        const {bookName, publishYear, author_1, author_2, author_3, description}: AddingBook = req.body;
+        const imagePath: InputImage = req.file?.filename || null;
         await (await connection).query(addBookSQL, [bookName, (publishYear || 0), imagePath, description, author_1, author_2, author_3]);
-        await res.status(200);
-        await res.redirect(adminV1Href);
+        res.status(200);
+        res.redirect(adminV1Href);
     } catch (err) {
         throw Error("Error during adding book to v1 db -> " + err);
     }

@@ -1,5 +1,5 @@
 import express from "express";
-import { FieldPacket, RowDataPacket } from "mysql2";
+import { FieldPacket, OkPacket, ResultSetHeader, RowDataPacket } from "mysql2";
 
 export type ApiVersion = "v1" | "v2";
 export type Request = express.Request;
@@ -12,3 +12,8 @@ export type ActionCounterType = "visits" | "wants";
 export type PagesStatusObj = {offsetAhead: number, offsetBack: number, totalyFound: number, hasNextPage?: boolean, hasPrevPage?: boolean};
 export type SearchQueryData = {author: string, year: string, search: string, offset: number};
 export type Credentials = {login: string, password: string};
+export type InputImage = string | null;
+export type AddingBook = {bookName: string, publishYear: string, author_1: string, author_2: string, author_3: string, description: string};
+export type AddingBookV2 = {bookName: string, publishYear: string, description: string, imagePath: string};
+export type AdminV2DBResponse = [RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]];
+export type ValidationGroup = "mainData" | "authors";
