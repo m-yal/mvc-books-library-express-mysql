@@ -18,3 +18,4 @@ export type AddingBookV2 = {bookName: string, publishYear: string, description: 
 export type AdminV2DBResponse = [RowDataPacket[] | RowDataPacket[][] | OkPacket | OkPacket[] | ResultSetHeader, FieldPacket[]];
 export type ValidationGroup = "mainData" | "authors";
 export type MulterCBFunc = (error: Error | null, destination: string) => void;
+export type DB_VERSIONS = "v1" | "v2";

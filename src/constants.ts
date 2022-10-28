@@ -2,6 +2,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// middlewares
+export const CRON_SCHEDULE = "* * 23 * * *";
+export const DUMPS_PATH = "dumps"; // comparing to project`s root
+export const IMAGES_PATH = './public/images/';
+export const STATIC_DIR_PATH = "public"; // comparing to project`s root
+
 // books.ts v2
 export const MAX_BOOKS_PER_PAGE: number = 20;
 export const booksTableName: string = "books";
