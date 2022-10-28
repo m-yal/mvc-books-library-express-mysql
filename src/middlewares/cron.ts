@@ -1,20 +1,20 @@
 import cron from "node-cron";
-import { exec } from "child_process";
+import { exec, ExecException } from "child_process";
 import mysqldump from "mysqldump";
 
-export default function launchCron() {
+export default function launchCron(): void {
     cron.schedule("* * 23 * * *", () => {
         const fileName: string = `dump-${Date.now()}.sql`;
         const dirName: string = `dumps`; // comparing to project`s root
-        exec(`cd ${dirName} && touch ${fileName}`, (error: any, stdout: any, stderr: any) => {
+        exec(`cd ${dirName} && touch ${fileName}`, (error: ExecException | null, stdout: string, stderr: string) => {
             if(hasOccured(error, stderr)) return;
             dumpDBData(dirName, fileName);
-            hardDelete("v2");//"v2" to constants
+            hardDelete("v2");
         })
     });
 }
 
-function hasOccured(error: any, stderr: any): boolean {
+function hasOccured(error: ExecException | null, stderr: string): boolean {
     if (error) {
         console.error(`error: ${error.message}`);
         return true;
@@ -26,7 +26,7 @@ function hasOccured(error: any, stderr: any): boolean {
     return false;
 }
 
-function dumpDBData(dirName: string, fileName: string) {
+function dumpDBData(dirName: string, fileName: string): void {
     mysqldump({
         connection: {
             host: 'localhost',
@@ -39,8 +39,8 @@ function dumpDBData(dirName: string, fileName: string) {
     console.log(`Dumping to file ${fileName} completed!`);
 }
 
-function hardDelete(dbVersion: "v1" | "v2") {
-    exec(`npm run delete-hard-${dbVersion}`, (error: any, stdout: any, stderr: any) => {
+function hardDelete(dbVersion: "v1" | "v2"): void {
+    exec(`npm run delete-hard-${dbVersion}`, (error: ExecException | null, stdout: string, stderr: string) => {
         if(hasOccured(error, stderr)) return;
         console.log(`Hard deletion in db version ${dbVersion} executed.`);
     })

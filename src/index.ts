@@ -18,5 +18,5 @@ setViewsParams();
 activateAllV1Routers();
 activateAllV2Routers();
 handleWrongURL();
-launchServer(app);
+launchServer();
 launchCron();

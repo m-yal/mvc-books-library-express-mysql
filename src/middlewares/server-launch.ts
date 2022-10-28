@@ -1,6 +1,9 @@
 import {app} from "../index";
+import dotenv from "dotenv";
 
-export default function launchServer(app: any) {
+dotenv.config();
+
+export default function launchServer(): void {
     const PORT: string = process.env.PORT || "3005";
     app.listen(PORT);
     console.log("Server started on port " + PORT);

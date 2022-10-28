@@ -1,18 +1,15 @@
 import {app} from "../index";
 import { v4 as uuidv4 } from 'uuid';
-import session, { Cookie } from "express-session";
+import session from "express-session";
+import {Request} from "../types";
+import dotenv from "dotenv";
 
-export default function launchSessionsManagemenet() {
+export default function launchSessionsManagemenet(): void {
     app.use(session({
-        name: "sid",
-        secret: 'keyboard cat',
+        name: process.env.SID_COOKIE_NAME,
+        secret: process.env.SID_SECRET as string,
         resave: false,
         saveUninitialized: true,
-        genid: function(req) {
-            const sid = uuidv4();
-            console.log('Session id created: ' + sid);
-            return sid;
-        },
+        genid: (req: Request): string => uuidv4()
     }));
 } 
-
