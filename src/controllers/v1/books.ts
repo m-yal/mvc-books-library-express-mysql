@@ -28,8 +28,8 @@ async function getAll(req: Request, res: Response): Promise<Response | void> {
 
 async function countBooksAmount(offset: number, searchQuery: string | null, sql: string): Promise<number> {
     try {
-        const foundBooksCountSQLQuery: string = typeof searchQuery === null ?
-            countAllBooksSQLV1 : composeFoundBooksCountQuery(sql, `LIMIT ${MAX_BOOKS_PER_PAGE} OFFSET ${offset}`);
+        const foundBooksCountSQLQuery: string = typeof searchQuery === "string" ?
+            composeFoundBooksCountQuery(sql, `LIMIT ${MAX_BOOKS_PER_PAGE} OFFSET ${offset}`) : countAllBooksSQLV1;
         const countResp: DBResponse = await (await connection).query(foundBooksCountSQLQuery);
         return countResp[0][0].count;
     } catch (err) {
@@ -55,7 +55,7 @@ async function search(req: Request, res: Response): Promise<Response | void> {
         const search: string = String(req.query.search);
         const offset: number = Number(req.query.offset) || 0;
         
-        const searchSQL: string = composeSLQQuery(author, year, offset, search);  
+        const searchSQL: string = composeSLQQuery(author, year, offset, search);
         const searchResp: DBResponse = await (await connection).query(searchSQL);
         const books: RowDataPacket[] = searchResp[0];
         const count: number = await countBooksAmount(offset, search, searchSQL);
@@ -63,14 +63,14 @@ async function search(req: Request, res: Response): Promise<Response | void> {
         res.render(bookPageRenderPathV1, {books: books, searchQuery: search, pagesStatus: assemblePagesStatusData(offset, count)});
     } catch (err) {
         res.status(500);
-        return res.json({error: "Error in database during searching books: " + err});
+        return res.json({error: "Error in database during searching books -> " + err});
     }
 };
 
 function composeSLQQuery(author: string, year: string, offset: number, searchQuery: string): string {
     const mainPart: string = `SELECT * FROM books WHERE is_deleted = FALSE AND book_name LIKE '%${searchQuery}%'`;
-    const authorPart: string = author ? ` AND autor_id = ${author}` : "";
-    const yearPart: string = year ? ` AND year = ${year}` : "";
+    const authorPart: string = author === "undefined" ? "" : ` AND author_1 = ${author}`;
+    const yearPart: string = year === "undefined" ? "" : ` AND year = ${year}`;
     const orderByPart: string = `ORDER BY book_name ASC`;
     const offsetPart: string = `LIMIT ${MAX_BOOKS_PER_PAGE} OFFSET ${offset};`;
     return mainPart + " " + [authorPart, yearPart].join("") + " " + orderByPart + " " + offsetPart; 
