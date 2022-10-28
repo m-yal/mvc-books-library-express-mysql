@@ -1,11 +1,7 @@
 import { RowDataPacket } from "mysql2";
+import { bookPageRenderPathV1, countAllBooksSQLV1, getBooksListSQLV1, MAX_BOOKS_PER_PAGE } from "../../constants";
 import connection from "../../models/utils/connection";
 import { DBResponse, PagesStatusObj, Request, Response } from "../../types";
-
-const LIMIT: number = 20;
-const bookPageRenderPath: string = "v1/books/index";
-const countAllBooksSQL: string = `SELECT COUNT(*) AS count FROM books WHERE is_deleted = FALSE;`;
-const getBooksListSQL: string = `SELECT * FROM books WHERE is_deleted = FALSE ORDER BY book_name ASC LIMIT ? OFFSET ?;`;
 
 export function getBooks(req: Request, res: Response): void {
     if (typeof req.query.search === "string") {
@@ -18,12 +14,12 @@ export function getBooks(req: Request, res: Response): void {
 async function getAll(req: Request, res: Response): Promise<Response | void> {
     const offset: number = Number(req.query.offset) || 0;
     try {
-        const booksResp: DBResponse = await (await connection).query(getBooksListSQL, [LIMIT, offset]);
+        const booksResp: DBResponse = await (await connection).query(getBooksListSQLV1, [MAX_BOOKS_PER_PAGE, offset]);
         const books: RowDataPacket[] = booksResp[0];
-        const count: number = await countBooksAmount(offset, null, getBooksListSQL);
+        const count: number = await countBooksAmount(offset, null, getBooksListSQLV1);
         const pagesStatus: PagesStatusObj = assemblePagesStatusData(offset, count);
         res.status(200);
-        res.render(bookPageRenderPath, {books: books, searchQuery: null, pagesStatus: pagesStatus});
+        res.render(bookPageRenderPathV1, {books: books, searchQuery: null, pagesStatus: pagesStatus});
     } catch (err) {
         res.status(500);
         return res.json({error: `Error in database during getting books list with offset ${offset} -> ${err}`});
@@ -33,7 +29,7 @@ async function getAll(req: Request, res: Response): Promise<Response | void> {
 async function countBooksAmount(offset: number, searchQuery: string | null, sql: string): Promise<number> {
     try {
         const foundBooksCountSQLQuery: string = typeof searchQuery === null ?
-            countAllBooksSQL : composeFoundBooksCountQuery(sql, `LIMIT ${LIMIT} OFFSET ${offset}`);
+            countAllBooksSQLV1 : composeFoundBooksCountQuery(sql, `LIMIT ${MAX_BOOKS_PER_PAGE} OFFSET ${offset}`);
         const countResp: DBResponse = await (await connection).query(foundBooksCountSQLQuery);
         return countResp[0][0].count;
     } catch (err) {
@@ -43,8 +39,8 @@ async function countBooksAmount(offset: number, searchQuery: string | null, sql:
 
 function assemblePagesStatusData(offset: number, count: number): PagesStatusObj {
     const pagesStatus: PagesStatusObj = {
-        offsetAhead: offset + LIMIT,
-        offsetBack: offset - LIMIT,
+        offsetAhead: offset + MAX_BOOKS_PER_PAGE,
+        offsetBack: offset - MAX_BOOKS_PER_PAGE,
         totalyFound: count,
     }
     pagesStatus.hasNextPage = pagesStatus.offsetAhead <= pagesStatus.totalyFound
@@ -64,7 +60,7 @@ async function search(req: Request, res: Response): Promise<Response | void> {
         const books: RowDataPacket[] = searchResp[0];
         const count: number = await countBooksAmount(offset, search, searchSQL);
         res.status(200);
-        res.render(bookPageRenderPath, {books: books, searchQuery: search, pagesStatus: assemblePagesStatusData(offset, count)});
+        res.render(bookPageRenderPathV1, {books: books, searchQuery: search, pagesStatus: assemblePagesStatusData(offset, count)});
     } catch (err) {
         res.status(500);
         return res.json({error: "Error in database during searching books: " + err});
@@ -76,7 +72,7 @@ function composeSLQQuery(author: string, year: string, offset: number, searchQue
     const authorPart: string = author ? ` AND autor_id = ${author}` : "";
     const yearPart: string = year ? ` AND year = ${year}` : "";
     const orderByPart: string = `ORDER BY book_name ASC`;
-    const offsetPart: string = `LIMIT ${LIMIT} OFFSET ${offset};`;
+    const offsetPart: string = `LIMIT ${MAX_BOOKS_PER_PAGE} OFFSET ${offset};`;
     return mainPart + " " + [authorPart, yearPart].join("") + " " + orderByPart + " " + offsetPart; 
 }
 

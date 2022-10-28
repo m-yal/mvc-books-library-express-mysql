@@ -9,7 +9,7 @@ export default async function executeSQLFile(sqlFileName: string, version: ApiVe
     try {
         await (await connection).query(queries);
         await (await connection).end();
-        console.log("SQL files executed, connection ended");
+        console.log("SQL files executed, connection to DB ended");
     } catch (err) {
         console.log(`Error during executing sql file ${sqlFileName} or ending connection`);
         throw err;
