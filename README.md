@@ -1,4 +1,4 @@
-# mvc-books-library
+# Sh++ books library api written by MVC model with express.js and MySql
 
 ## Short description
 Library server that allows browsing books, searching them, adding and deleting by admin. Backups and soft deletions exeuctes every 24 hours by cron with help of child_process. Pages renders by ejs.
